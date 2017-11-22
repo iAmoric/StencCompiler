@@ -15,12 +15,17 @@ number          [0-9]+
 "return"        { return RETURN; }
 "if"            { return IF; }
 "while"         { return WHILE; }
-"do"            { return DO; }
 "else"          { return ELSE; }
 "for"           { return FOR; }
 "true"          { return TRUE; }
 "false"         { return FALSE; }
-"define"        { return DEFINE; }
+"const"         { return CONST; }
+"printi"        { return PRINTI; }
+"printf"        { return PRINTF; }
+"+"             { return OP_PLUS; }
+"-"             { return OP_MINUS; }
+"*"             { return OP_MULTI; }
+"/"             { return OP_DIV; }
 {identifier}    { return ID; }
 {number}        { return NUM; }
 
