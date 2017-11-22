@@ -6,6 +6,8 @@
 
 identifier      [a-zA-Z_][0-9a-zA-Z_]*
 number          [0-9]+
+comment         \/\/.*
+/* comments like  '// blabla' */
 
 %%
 
@@ -13,6 +15,7 @@ number          [0-9]+
 "stencil"       { return STENCIL; }
 "main"          { return MAIN; }
 "return"        { return RETURN; }
+"void"          { return VOID; }
 "if"            { return IF; }
 "while"         { return WHILE; }
 "else"          { return ELSE; }
@@ -22,12 +25,25 @@ number          [0-9]+
 "const"         { return CONST; }
 "printi"        { return PRINTI; }
 "printf"        { return PRINTF; }
-"+"             { return OP_PLUS; }
-"-"             { return OP_MINUS; }
-"*"             { return OP_MULTI; }
-"/"             { return OP_DIV; }
 {identifier}    { return ID; }
 {number}        { return NUM; }
+{comment}       { return COMMENT; } /* ignore ? */
+"+"             { return OP_PLUS; }
+"++"            { return OP_INC; }
+"-"             { return OP_MINUS; }
+"--"            { return OP_DEC; }
+"*"             { return OP_MULTI; }
+"/"             { return OP_DIV; }
+"$"             { return OP_STEN; }
+"="             { return yytext[0]; }
+[()]            { return yytext[0]; }
+[{}]            { return yytext[0]; }
+[[]]            { return yytext[0]; }
+","             { return yytext[0]; }
+";"	            { return yytext[0]; }
+\n              { return yytext[0]; }
+[\t ]           { return yytext[0]; }
+.			    { printf("[Lex] Unknown character: %s\n", yytext); }
 
 %%
 
