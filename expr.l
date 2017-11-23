@@ -7,6 +7,7 @@
 identifier      [a-zA-Z_][0-9a-zA-Z_]*
 number          [0-9]+
 comment         \/\/.*
+
 /* comments like  '// blabla' */
 
 %%
@@ -35,6 +36,7 @@ comment         \/\/.*
 "*"             { return OP_MULTI; }
 "/"             { return OP_DIV; }
 "$"             { return OP_STEN; }
+"=="            { return OP_EQUAL; }
 "="             { return yytext[0]; }
 [()]            { return yytext[0]; }
 [{}]            { return yytext[0]; }
