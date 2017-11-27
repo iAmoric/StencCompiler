@@ -50,7 +50,7 @@ programme:
   ;
 
 statement_list:
-  statement statement_list {
+  statement ";" statement_list {
 
 
   }
@@ -79,45 +79,45 @@ statement:
   control_structure {
 
   }
-  | RETURN NUM ";" {
+  | RETURN NUM {
 
   }
   ;
 
 declaration:
-   INT ID ";" {
+   INT ID {
 
    }
    |
-   CONST INT ID ";" {
+   CONST INT ID {
 
    }
   ;
 
 affectation:
-    ID OP_ASSIGN ID ";" {
+    ID OP_ASSIGN ID {
 
     }
     |
-    ID OP_ASSIGN NUM ";" {
+    ID OP_ASSIGN NUM {
 
     }
     |
-    ID OP_ASSIGN expression ";" {
+    ID OP_ASSIGN expression {
 
     }
     ;
 
 declaration_affectation:
-    INT ID OP_ASSIGN ID ";" {
+    INT ID OP_ASSIGN ID {
 
     }
     |
-    INT ID OP_ASSIGN NUM ";" {
+    INT ID OP_ASSIGN NUM {
 
     }
     |
-    INT ID OP_ASSIGN expression ";" {
+    INT ID OP_ASSIGN expression {
 
     }
     ;
