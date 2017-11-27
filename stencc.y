@@ -54,7 +54,7 @@ statement_list:
 
 
   }
-  | 
+  |
   statement {
 
   }
@@ -68,6 +68,17 @@ statement:
   affectation {
 
   }
+  |
+  declaration_affectation {
+
+  }
+  expression {
+
+  }
+  |
+  control_structure {
+
+  }
   | RETURN NUM ";" {
 
   }
@@ -78,6 +89,7 @@ declaration:
 
    }
   ;
+
 affectation:
     ID OP_ASSIGN ID ";" {
 
@@ -86,6 +98,43 @@ affectation:
     ID OP_ASSIGN NUM ";" {
 
     }
+    |
+    ID OP_ASSIGN expression ";" {
+
+    }
+    ;
+
+declaration_affectation:
+    INT ID OP_ASSIGN ID ";" {
+
+    }
+    |
+    INT ID OP_ASSIGN NUM ";" {
+
+    }
+    |
+    INT ID OP_ASSIGN expression ";" {
+
+    }
+    ;
+
+expression:
+    ;
+
+control_structure:
+    IF "(" ") {" statement_list "}" {
+
+    }
+    |
+    WHILE "(" ") {" statement_list "}" {
+
+    }
+    |
+    FOR "(" ") {" statement_list "}" {
+
+    }
+    ;
+
 %%
 
 void yyerror (char *s) {
