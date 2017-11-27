@@ -88,6 +88,10 @@ declaration:
    INT ID ";" {
 
    }
+   |
+   CONST INT ID ";" {
+
+   }
   ;
 
 affectation:
@@ -119,18 +123,79 @@ declaration_affectation:
     ;
 
 expression:
-    ;
+    expression OP_PLUS expression {
+
+    }
+    |
+    expression OP_MINUS expression {
+
+    }
+    |
+    OP_MINUS expression {
+
+    }
+    |
+    expression OP_MULTI expression {
+
+    }
+    |
+    expression OP_DIV expression {
+
+    }
+    |
+    '(' expression ')'{
+
+    }
+    |
+    ID {
+
+    }
+    |
+    NUM {
+
+    }
+;
 
 control_structure:
-    IF "(" ") {" statement_list "}" {
+    IF condition "{" statement_list "}" {
 
     }
     |
-    WHILE "(" ") {" statement_list "}" {
+    WHILE condition "{" statement_list "}" {
 
     }
     |
-    FOR "(" ") {" statement_list "}" {
+    FOR "(" ")" "{" statement_list "}" {
+
+    }
+    ;
+
+condition:
+    ID OP_EQUAL NUM {
+
+    }
+    |
+    TRUE {
+
+    }
+    |
+    FALSE {
+
+    }
+    |
+    condition OP_OR condition {
+
+    }
+    |
+    condition OP_AND condition {
+
+    }
+    |
+    OP_NOT condition {
+
+    }
+    |
+    "(" condition ")" {
 
     }
     ;
