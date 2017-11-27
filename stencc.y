@@ -20,11 +20,18 @@
   }codegen;
 }
 
+%token INT STENCIL MAIN RETURN VOID
+%token IF WHILE ELSE FOR TRUE FALSE
+%token CONST PRINTI PRINTF ID NUM
+%token OP_PLUS OP_INC OP_MINUS OP_DEC
+%token OP_STEN OP_EQUAL OP_ASSIGN OP_AND
+%token OP_OR OP_NOT
+%token OP_MULTI OP_DIV OP_SUP OP_INF OP_SUP_EQUAL OP_INF_EQUAL
 
 
-%left OR
-%left AND
-%left NOT
+%left OP_OR
+%left OP_AND
+%left OP_NOT
 
 %%
 
@@ -37,7 +44,7 @@ axiom:
   ;
 
 programme:
-    INT MAIN "{" statement_list RETURN NUM"}"{
+    INT MAIN "(){" statement_list "}"{
 
     }
   ;
@@ -59,6 +66,9 @@ statement:
   }
   |
   affectation {
+
+  }
+  | RETURN NUM ";" {
 
   }
   ;

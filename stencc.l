@@ -12,9 +12,9 @@ comment         \/\/.*
 
 %%
 
-"int"           { return INT; }
+"int"           { printf("int\n");return INT; }
 "stencil"       { return STENCIL; }
-"main"          { return MAIN; }
+"main"          { printf("main\n");return MAIN; }
 "return"        { return RETURN; }
 "void"          { return VOID; }
 "if"            { return IF; }
@@ -26,8 +26,8 @@ comment         \/\/.*
 "const"         { return CONST; }
 "printi"        { return PRINTI; }
 "printf"        { return PRINTF; }
-{identifier}    { return ID; }
-{number}        { return NUM; }
+{identifier}    { printf("ID\n");return ID; }
+{number}        { printf("NUM\n");return NUM; }
 {comment}       { }
 "+"             { return OP_PLUS; }
 "++"            { return OP_INC; }
@@ -45,8 +45,8 @@ comment         \/\/.*
 "<"             { return OP_INF; }
 ">="|"=>"       { return OP_SUP_EQUAL; }
 "=<"|"<="       { return OP_INF_EQUAL; }
-[()]            { return yytext[0]; }
-[{}]            { return yytext[0]; }
+[()]            { printf("%c\n",yytext[0]);return yytext[0]; }
+[{}]            { printf("Crochet %c\n",yytext[0]);return yytext[0]; }
 [[]]            { return yytext[0]; }
 ","             { return yytext[0]; }
 ";"	            { return yytext[0]; }

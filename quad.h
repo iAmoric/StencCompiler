@@ -5,7 +5,7 @@
 #include "operator.h"
 
 struct quad{
-	enum operator;
+	enum operator operator;
 	int number;
 	struct symbol* result;
 	struct symbol* arg1;
