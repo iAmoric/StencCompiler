@@ -1,0 +1,11 @@
+int main() {
+    int a;
+    if (true) {
+        int b;
+    }
+    if (false) {
+        const int c;
+        c = i;
+    }
+    return 0;
+}
