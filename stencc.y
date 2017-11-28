@@ -8,6 +8,8 @@
   void yyerror(char*);
   int yylex();
   void lex_free();
+
+  FILE *yyin;
 %}
 %union {
   char* string;
@@ -206,8 +208,8 @@ void yyerror (char *s) {
     fprintf(stderr, "[Yacc] error: %s\n", s);
 }
 
-int main() {
-  printf("Enter your code:\n");
+int main(int argc, char* argv[]) {
+  yyin = fopen(argv[1], "r");
   yyparse();
   printf("-----------------\nSymbol table:\n");
   printf("-----------------\nQuad list:\n");
