@@ -21,10 +21,12 @@
     struct quad_list* false_list;
   }codegen;
 }
-
+%type <codegen> expression
+%token <string> ID
+%token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
 %token IF WHILE ELSE FOR TRUE FALSE
-%token CONST PRINTI PRINTF ID NUM
+%token CONST PRINTI PRINTF
 %token OP_PLUS OP_INC OP_MINUS OP_DEC
 %token OP_STEN OP_EQUAL OP_ASSIGN OP_AND
 %token OP_OR OP_NOT

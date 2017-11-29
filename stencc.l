@@ -26,8 +26,8 @@ comment         \/\/.*
 "const"         { return CONST; }
 "printi"        { return PRINTI; }
 "printf"        { return PRINTF; }
-{identifier}    { return ID; }
-{number}        { return NUM; }
+{identifier}    { yylval.string = strdup(yytext);return ID; }
+{number}        { yylval.value = atoi(yytext);return NUM; }
 {comment}       { }
 "+"             { return OP_PLUS; }
 "++"            { return OP_INC; }
