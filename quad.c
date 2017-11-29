@@ -11,7 +11,7 @@ struct quad* quad_gen(enum operator op,struct symbol* result,struct symbol* arg1
 	new_quad->result = result;
 	new_quad->arg1 = arg1;
 	new_quad->arg2 = arg2;
-	new_quad = quad_number;
+	new_quad->number =  quad_number;
 	quad_number++;
 	return new_quad;
 }
@@ -34,15 +34,41 @@ void quad_print(struct quad* list){
 	struct symbol* result;
 	struct symbol* arg1;
 	struct symbol* arg2;
+	char* operator_string;
 	while(list != NULL){	
 		result = list->result;
 		arg1 = list->arg1;
 		arg2 = list->arg2;
-		printf("%s <- ",result->identifier);
-		if(arg2 != NULL){
-			printf("%s %c %s\n",arg1->identifier,list->operator,arg2->identifier);
+		printf("%s ",result->identifier);
+		switch(list->operator){
+			case E_RETURN:
+				operator_string = "RETURN";
+				break;
+			case E_ASSIGN:
+				operator_string = "ASSIGN";
+				break;
+			case E_PLUS:
+				operator_string = "PLUS";
+				break;
+			case E_MINUS:
+				operator_string = "MINUS";
+				break;
+			case E_MULT:
+				operator_string = "MULT";
+				break;
+			case E_DIV:
+				operator_string = "DIV";
+				break;
+			default:
+				operator_string = "NOT_DEFINED";
+				break;
+		}
+		if(arg2 != NULL && arg1 != NULL){
+			printf(" <- %s %s %s\n",arg1->identifier,operator_string,arg2->identifier);
+		}else if (arg1 != NULL){
+			printf(" %s %s\n",operator_string,arg1->identifier);
 		}else{
-			printf("%c %s\n",list->operator,arg1->identifier);
+			printf(" %s\n",operator_string);
 		}
 		list = list->next;
 	}

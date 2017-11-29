@@ -4,11 +4,13 @@
   #include "symbol.h"
   #include "quad.h"
   #include "quad_list.h"
+  #include "operator.h"
 
   void yyerror(char*);
   int yylex();
   void lex_free();
-
+  struct symbol* symbol_list = NULL;
+  struct quad* quad_list = NULL;
   FILE *yyin;
 %}
 %union {
@@ -21,7 +23,7 @@
     struct quad_list* false_list;
   }codegen;
 }
-%type <codegen> expression
+%type <codegen> expression affectation statement statement_list declaration programme
 %token <string> ID
 %token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
@@ -31,7 +33,6 @@
 %token OP_STEN OP_EQUAL OP_ASSIGN OP_AND
 %token OP_OR OP_NOT
 %token OP_MULTI OP_DIV OP_SUP OP_INF OP_SUP_EQUAL OP_INF_EQUAL
-
 
 %left OP_OR
 %left OP_AND
@@ -47,6 +48,7 @@
 axiom:
     programme
     {
+      quad_list = $1.code;
       printf("Match !!!\n");
       return 0;
     }
@@ -54,58 +56,85 @@ axiom:
 
 programme:
     INT MAIN '(' ')' '{' statement_list '}'{
-
+      $$.code = $6.code;
     }
   ;
 
 statement_list:
   statement statement_list {
-
-
+    $$.code = quad_add($1.code,$2.code);
   }
   |
   statement {
-
+    $$.code = $1.code;
   }
   ;
 
 statement:
   declaration ';' {
-    printf("statement: declaration\n");
+    $$.code = $1.code;
   }
   |
   affectation ';' {
-    printf("statement: affecratsion\n");
+    $$.code = $1.code;
   }
   |
   declaration_affectation ';'{
     printf("statement: declare affect\n");
   }
   expression ';' {
-    printf("statement: expr\n");
+    //$$.code = $1.code;
   }
   |
   control_structure {
-     printf("statement: control structure\n");
+
   }
   | RETURN NUM ';' {
-     printf("statement: return\n");
+    struct symbol* result = symbol_newtemp(&symbol_list);
+    result->isconstant = true;
+    result->value = $2;
+    $$.result = result;
+    $$.code = quad_gen(E_RETURN,result,NULL,NULL);
   }
   ;
 
 declaration:
    INT ID {
-
+    struct symbol* result = symbol_lookup(symbol_list, $2);
+      if(result == NULL){
+        result = symbol_add(&symbol_list, $2);
+      }else{
+        printf("ERROR: already declared variable -> %s",$2);
+        exit(1);
+      }
+      $$.result = result;
+      $$.code = NULL;
    }
    |
    CONST INT ID {
-
+    struct symbol* result = symbol_lookup(symbol_list, $3);
+      if(result == NULL){
+        result = symbol_add(&symbol_list, $3);
+      }else{
+        printf("ERROR: already declared variable -> %s",$3);
+        exit(1);
+      }
+      $$.result = result;
+      $$.code = NULL;
    }
   ;
 
 affectation:
     ID OP_ASSIGN expression {
-
+      struct symbol* result = symbol_lookup(symbol_list, $1);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s",$1);
+        exit(1);
+      }
+      $$.result = result;
+      struct quad* quad = quad_gen(E_ASSIGN,result,$3.result,NULL);
+      struct quad* code = quad_add($3.code,quad);
+      $$.code = code;
     }
     ;
 
@@ -116,11 +145,22 @@ declaration_affectation:
     ;
 expression:
     expression OP_PLUS expression {
-
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      $$.result = result;
+      
+      struct quad* quad = quad_gen(E_PLUS,result,$1.result,$3.result);
+      struct quad* code = quad_add($1.code,$3.code);
+      code = quad_add(code,quad);
+      $$.code = code;
     }
     |
     expression OP_MINUS expression {
-
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      $$.result = result;
+      struct quad* quad = quad_gen(E_MINUS,result,$1.result,$3.result);
+      struct quad* code = quad_add($1.code,$3.code);
+      code = quad_add(code,quad);
+      $$.code = code;
     }
     |
     OP_MINUS expression {
@@ -128,23 +168,41 @@ expression:
     }
     |
     expression OP_MULTI expression {
-
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      $$.result = result;
+      struct quad* quad = quad_gen(E_MULT,result,$1.result,$3.result);
+      struct quad* code = quad_add($1.code,$3.code);
+      code = quad_add(code,quad);
+      $$.code = code;
     }
     |
     expression OP_DIV expression {
-
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      $$.result = result;
+      struct quad* quad = quad_gen(E_DIV,result,$1.result,$3.result);
+      struct quad* code = quad_add($1.code,$3.code);
+      code = quad_add(code,quad);
+      $$.code = code;
     }
     |
     '(' expression ')'{
-
+      $$.result = $2.result;
+      $$.code = $2.code;
     }
     |
     ID {
-
+      struct symbol* result = symbol_lookup(symbol_list, $1);
+      if(result == NULL)result = symbol_add(&symbol_list, $1);
+      $$.result = result;
+      $$.code = NULL;
     }
     |
     NUM {
-
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      result->isconstant = true;
+      result->value = $1;
+      $$.result = result;
+      $$.code = NULL;
     }
 ;
 
@@ -202,7 +260,9 @@ int main(int argc, char* argv[]) {
   yyin = fopen(argv[1], "r");
   yyparse();
   printf("-----------------\nSymbol table:\n");
+  symbol_print(symbol_list);
   printf("-----------------\nQuad list:\n");
+  quad_print(quad_list);
 
   // Be clean.
   lex_free();
