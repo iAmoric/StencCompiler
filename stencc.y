@@ -5,7 +5,10 @@
   #include "quad.h"
   #include "quad_list.h"
   #include "operator.h"
+  //#define DEBUG
+  
 
+  void debug(char*);
   void yyerror(char*);
   int yylex();
   void lex_free();
@@ -46,8 +49,7 @@
 %%
 
 axiom:
-    programme
-    {
+    programme{
       quad_list = $1.code;
       printf("Match !!!\n");
       return 0;
@@ -56,6 +58,7 @@ axiom:
 
 programme:
     INT MAIN '(' ')' '{' statement_list '}'{
+      debug("programme");
       $$.code = $6.code;
     }
   ;
@@ -63,31 +66,39 @@ programme:
 statement_list:
   statement statement_list {
     $$.code = quad_add($1.code,$2.code);
+    debug("statement");
   }
   |
   statement {
     $$.code = $1.code;
+    debug("statement");
   }
   ;
 
 statement:
   declaration ';' {
-    $$.code = $1.code;
-  }
+    debug("declaration");  
+    }
   |
   affectation ';' {
     $$.code = $1.code;
+   
+    debug("affectation");
   }
   |
   declaration_affectation ';'{
     printf("statement: declare affect\n");
   }
+  |
   expression ';' {
     //$$.code = $1.code;
+       
+      debug("expression");
   }
   |
   control_structure {
-
+    
+      debug("control_structure");
   }
   | RETURN NUM ';' {
     struct symbol* result = symbol_newtemp(&symbol_list);
@@ -95,6 +106,7 @@ statement:
     result->value = $2;
     $$.result = result;
     $$.code = quad_gen(E_RETURN,result,NULL,NULL);
+      debug("return");
   }
   ;
 
@@ -135,12 +147,14 @@ affectation:
       struct quad* quad = quad_gen(E_ASSIGN,result,$3.result,NULL);
       struct quad* code = quad_add($3.code,quad);
       $$.code = code;
+      debug("ID = expr");
     }
+    
     ;
 
 declaration_affectation:
     INT ID OP_ASSIGN expression {
-
+      debug("INT ID = expr");
     }
     ;
 expression:
@@ -152,6 +166,7 @@ expression:
       struct quad* code = quad_add($1.code,$3.code);
       code = quad_add(code,quad);
       $$.code = code;
+      debug("expr + expr");
     }
     |
     expression OP_MINUS expression {
@@ -161,6 +176,7 @@ expression:
       struct quad* code = quad_add($1.code,$3.code);
       code = quad_add(code,quad);
       $$.code = code;
+      debug(" expr - expr");
     }
     |
     OP_MINUS expression {
@@ -195,6 +211,7 @@ expression:
       if(result == NULL)result = symbol_add(&symbol_list, $1);
       $$.result = result;
       $$.code = NULL;
+      debug("ID");
     }
     |
     NUM {
@@ -203,6 +220,7 @@ expression:
       result->value = $1;
       $$.result = result;
       $$.code = NULL;
+      debug("NUM");
     }
 ;
 
@@ -254,6 +272,13 @@ condition:
 
 void yyerror (char *s) {
     fprintf(stderr, "[Yacc] error: %s\n", s);
+}
+
+void debug (char* s){
+#ifdef DEBUG
+fprintf(stderr, "[Yacc] ");
+  fprintf(stderr, "%s\n",s);
+  #endif
 }
 
 int main(int argc, char* argv[]) {
