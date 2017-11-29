@@ -4,7 +4,7 @@ YACC = yacc -d
 CFLAGS = -O2 -Wall
 LDFLAGS = -ly -ll # Linux: -lfl / OSX: -ll
 EXEC = stencc
-SRC =  symbol.c quad.c
+SRC =  symbol.c quad.c assembly_generator.c
 OBJ = $(SRC:.c=.o)
 
 all: $(OBJ) y.tab.c lex.yy.c

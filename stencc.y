@@ -5,8 +5,9 @@
   #include "quad.h"
   #include "quad_list.h"
   #include "operator.h"
+  #include "assembly_generator.h"
   //#define DEBUG
-  
+
 
   void debug(char*);
   void yyerror(char*);
@@ -77,12 +78,12 @@ statement_list:
 
 statement:
   declaration ';' {
-    debug("declaration");  
+    debug("declaration");
     }
   |
   affectation ';' {
     $$.code = $1.code;
-   
+
     debug("affectation");
   }
   |
@@ -92,12 +93,12 @@ statement:
   |
   expression ';' {
     //$$.code = $1.code;
-       
+
       debug("expression");
   }
   |
   control_structure {
-    
+
       debug("control_structure");
   }
   | RETURN NUM ';' {
@@ -149,7 +150,7 @@ affectation:
       $$.code = code;
       debug("ID = expr");
     }
-    
+
     ;
 
 declaration_affectation:
@@ -161,7 +162,7 @@ expression:
     expression OP_PLUS expression {
       struct symbol* result = symbol_newtemp(&symbol_list);
       $$.result = result;
-      
+
       struct quad* quad = quad_gen(E_PLUS,result,$1.result,$3.result);
       struct quad* code = quad_add($1.code,$3.code);
       code = quad_add(code,quad);
@@ -288,6 +289,9 @@ int main(int argc, char* argv[]) {
   symbol_print(symbol_list);
   printf("-----------------\nQuad list:\n");
   quad_print(quad_list);
+
+  //generation code assembleur
+  generator(symbol_list, quad_list);
 
   // Be clean.
   lex_free();

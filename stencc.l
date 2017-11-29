@@ -13,7 +13,7 @@ comment         \/\/.*
 
 %%
 
-"int"           {  return INT; }
+"int"           { return INT; }
 "stencil"       { return STENCIL; }
 "main"          { return MAIN; }
 "return"        { return RETURN; }
@@ -27,7 +27,7 @@ comment         \/\/.*
 "const"         { return CONST; }
 "printi"        { return PRINTI; }
 "printf"        { return PRINTF; }
-{identifier}    {  yylval.string = strdup(yytext);return ID; }
+{identifier}    { yylval.string = strdup(yytext);return ID; }
 {number}        { yylval.value = atoi(yytext);return NUM; }
 {comment}       { }
 "+"             { return OP_PLUS; }
@@ -43,14 +43,14 @@ comment         \/\/.*
 "||"            { return OP_OR; }
 "!"             { return OP_NOT; }
 ">"             { return OP_SUP; }
-"<"             {  return OP_INF; }
-">="|"=>"       {  return OP_SUP_EQUAL; }
-"=<"|"<="       {  return OP_INF_EQUAL; }
-[()]            {  return yytext[0]; }
-[{}]            {  return yytext[0]; }
-[[]]            {  return yytext[0]; }
-","             {  return yytext[0]; }
-";"	            {  return yytext[0]; }
+"<"             { return OP_INF; }
+">="|"=>"       { return OP_SUP_EQUAL; }
+"=<"|"<="       { return OP_INF_EQUAL; }
+[()]            { return yytext[0]; }
+[{}]            { return yytext[0]; }
+[[]]            { return yytext[0]; }
+","             { return yytext[0]; }
+";"	            { return yytext[0]; }
 \n              { }
 [\t ]           { }
 .			    { printf("[Lex] Unknown character: %s\n", yytext); }
