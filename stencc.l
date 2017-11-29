@@ -12,12 +12,12 @@ comment         \/\/.*
 
 %%
 
-"int"           { printf("int\n");return INT; }
+"int"           { return INT; }
 "stencil"       { return STENCIL; }
-"main"          { printf("main\n");return MAIN; }
-"return"        { printf("return\n");return RETURN; }
+"main"          { return MAIN; }
+"return"        { return RETURN; }
 "void"          { return VOID; }
-"if"            { printf("if\n");return IF; }
+"if"            { return IF; }
 "while"         { return WHILE; }
 "else"          { return ELSE; }
 "for"           { return FOR; }
@@ -26,8 +26,8 @@ comment         \/\/.*
 "const"         { return CONST; }
 "printi"        { return PRINTI; }
 "printf"        { return PRINTF; }
-{identifier}    { printf("ID\n");return ID; }
-{number}        { printf("NUM\n");return NUM; }
+{identifier}    { return ID; }
+{number}        { return NUM; }
 {comment}       { }
 "+"             { return OP_PLUS; }
 "++"            { return OP_INC; }
@@ -37,7 +37,7 @@ comment         \/\/.*
 "/"             { return OP_DIV; }
 "$"             { return OP_STEN; }
 "=="            { return OP_EQUAL; }
-"="             { printf("=\n");return OP_ASSIGN; }
+"="             { return OP_ASSIGN; }
 "&&"            { return OP_AND; }
 "||"            { return OP_OR; }
 "!"             { return OP_NOT; }
@@ -45,11 +45,11 @@ comment         \/\/.*
 "<"             { return OP_INF; }
 ">="|"=>"       { return OP_SUP_EQUAL; }
 "=<"|"<="       { return OP_INF_EQUAL; }
-[()]            { printf("%c\n",yytext[0]);return yytext[0]; }
-[{}]            { printf("%c\n",yytext[0]);return yytext[0]; }
+[()]            { return yytext[0]; }
+[{}]            { return yytext[0]; }
 [[]]            { return yytext[0]; }
 ","             { return yytext[0]; }
-";"	            { printf("%c\n",yytext[0]);return yytext[0]; }
+";"	            { return yytext[0]; }
 \n              { }
 [\t ]           { }
 .			    { printf("[Lex] Unknown character: %s\n", yytext); }

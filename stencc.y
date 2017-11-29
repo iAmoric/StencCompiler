@@ -34,6 +34,11 @@
 %left OP_OR
 %left OP_AND
 %left OP_NOT
+%left OP_PLUS
+%left OP_MINUS
+%left OP_MULTI
+%left OP_DIV
+
 
 %%
 
@@ -63,67 +68,50 @@ statement_list:
   ;
 
 statement:
-  declaration {
-
+  declaration ';' {
+    printf("statement: declaration\n");
   }
   |
-  affectation {
-
+  affectation ';' {
+    printf("statement: affecratsion\n");
   }
   |
-  declaration_affectation {
-
+  declaration_affectation ';'{
+    printf("statement: declare affect\n");
   }
-  expression {
-
+  expression ';' {
+    printf("statement: expr\n");
   }
   |
   control_structure {
-
+     printf("statement: control structure\n");
   }
   | RETURN NUM ';' {
-
+     printf("statement: return\n");
   }
   ;
 
 declaration:
-   INT ID ';' {
+   INT ID {
 
    }
    |
-   CONST INT ID ';' {
+   CONST INT ID {
 
    }
   ;
 
 affectation:
-    ID OP_ASSIGN ID ';' {
-
-    }
-    |
-    ID OP_ASSIGN NUM ';' {
-
-    }
-    |
-    ID OP_ASSIGN expression ';' {
+    ID OP_ASSIGN expression {
 
     }
     ;
 
 declaration_affectation:
-    INT ID OP_ASSIGN ID ';' {
-
-    }
-    |
-    INT ID OP_ASSIGN NUM ';' {
-
-    }
-    |
-    INT ID OP_ASSIGN expression ';' {
+    INT ID OP_ASSIGN expression {
 
     }
     ;
-
 expression:
     expression OP_PLUS expression {
 
