@@ -149,13 +149,25 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
                     break;
                 case E_PRINTI:
-                    fprintf(file, "# print %s\n", result->identifier);
+                    fprintf(file, "# printi %s\n", result->identifier);
                     fprintf(file, "li $v0,1\n");
 
                     if (result->identifier[0] == '_')
                         fprintf(file, "lw $a0, %s\n", result->identifier);
                     else
                         fprintf(file, "lw $a0, _%s\n", result->identifier);
+
+                    fprintf(file, "syscall\n");
+                    fprintf(file, "\n");
+                    break;
+                case E_PRINTF:
+                    fprintf(file, "# printf %s\n", result->identifier);
+                    fprintf(file, "li $v0,4\n");
+
+                    if (result->identifier[0] == '_')
+                        fprintf(file, "la $a0, %s\n", result->identifier);
+                    else
+                        fprintf(file, "la $a0, _%s\n", result->identifier);
 
                     fprintf(file, "syscall\n");
                     fprintf(file, "\n");
@@ -175,14 +187,18 @@ void generator(struct symbol* symbol, struct quad* quad) {
         fprintf(file, "\t.data\n");
         while (symbol != NULL) {
             if (symbol->identifier[0] == '_')
-                fprintf(file, "%s: .word ", symbol->identifier);
+                fprintf(file, "%s: ", symbol->identifier);
             else
-                fprintf(file, "_%s: .word ", symbol->identifier);
+                fprintf(file, "_%s: ", symbol->identifier);
 
-            if (symbol->isconstant)
-                fprintf(file, "%d\n", symbol->value);
+            if (symbol->isconstant) {
+                if (symbol->string == NULL)
+                    fprintf(file, ".word %d\n", symbol->value);
+                else
+                    fprintf(file, ".asciiz %s\n", symbol->string);
+            }
             else
-                fprintf(file, "0\n");
+                fprintf(file, ".word 0\n");
 
             symbol = symbol->next;
         }

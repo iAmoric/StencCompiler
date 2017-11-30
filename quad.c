@@ -62,6 +62,9 @@ void quad_print(struct quad* list){
 			case E_PRINTI:
 				operator_string = "PRINTI";
 				break;
+			case E_PRINTF:
+				operator_string = "PRINTF";
+				break;
 			default:
 				operator_string = "NOT_DEFINED";
 				break;

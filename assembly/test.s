@@ -30,14 +30,19 @@ sw $t0, _temp_6
 lw $t0, _temp_6
 sw $t0, _b
 
-# print _temp_7
+# printi _temp_7
 li $v0,1
 lw $a0, _temp_7
 syscall
 
-# print b
+# printi b
 li $v0,1
 lw $a0, _b
+syscall
+
+# printf _temp_8
+li $v0,4
+la $a0, _temp_8
 syscall
 
 # exit
@@ -55,4 +60,5 @@ _temp_4: .word 0
 _temp_5: .word 0
 _temp_6: .word 0
 _temp_7: .word 4
-_temp_8: .word 0
+_temp_8: .asciiz "hello world\n"
+_temp_9: .word 0

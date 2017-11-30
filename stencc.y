@@ -28,7 +28,7 @@
   }codegen;
 }
 %type <codegen> expression affectation statement statement_list declaration programme
-%token <string> ID
+%token <string> ID STRING
 %token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
 %token IF WHILE ELSE FOR TRUE FALSE
@@ -108,7 +108,7 @@ statement:
       result->value = $3;
       $$.result = result;
       $$.code = quad_gen(E_PRINTI,result,NULL,NULL);
-      debug("printi");
+      debug("printi num");
   }
   |
   PRINTI '(' ID ')' ';' {
@@ -120,7 +120,16 @@ statement:
       $$.result = result;
       struct quad* quad = quad_gen(E_PRINTI,result,NULL,NULL);
       $$.code = quad;
-      debug("ID = expr");
+      debug("printi id");
+  }
+  |
+  PRINTF '(' STRING ')' ';' {
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      result->isconstant = true;
+      result->string = $3;
+      $$.result = result;
+      $$.code = quad_gen(E_PRINTF,result,NULL,NULL);;
+      debug("printf");
   }
   |
   RETURN NUM ';' {

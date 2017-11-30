@@ -7,6 +7,7 @@ struct symbol* symbol_alloc(){
     new_symbol->identifier = NULL;
     new_symbol->isconstant = false;
     new_symbol->value = 0; // seulement si c'est une constante
+    new_symbol->string = NULL;
     new_symbol->next = NULL;
     return new_symbol;
 }
@@ -20,7 +21,7 @@ struct symbol* symbol_add(struct symbol** table, char* name)
     } else{
         struct symbol* scan = *table;
         while(scan->next != NULL)
-        scan = scan->next;
+            scan = scan->next;
         scan->next = symbol_alloc();
         scan->next->identifier = strdup(name);
         return scan->next;
@@ -40,7 +41,7 @@ struct symbol* symbol_lookup(struct symbol* table, char* identifier)
     while(table != NULL)
     {
         if(strcmp(table->identifier, identifier) == 0)
-        return table;
+            return table;
         table = table->next;
     }
     return NULL;
@@ -50,10 +51,14 @@ void symbol_print(struct symbol* symbol)
 {
     while(symbol != NULL){
         printf("identifier: %7s, is constant:", symbol->identifier);
-        if(symbol->isconstant)
-        printf("true,  value: %d\n", symbol->value);
+        if(symbol->isconstant) {
+            if (symbol->string == NULL)
+                printf("true,  value: %d\n", symbol->value);
+            else
+                printf("true,  value: %s\n", symbol->string);
+        }
         else
-        printf("false, value: N/A\n");
+            printf("false, value: N/A\n");
         symbol = symbol->next;
     }
 }

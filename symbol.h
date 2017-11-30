@@ -10,6 +10,7 @@ struct symbol {
   char* identifier;
   bool isconstant;
   int value; // seulement si c'est une constante
+  char* string;
   struct symbol* next;
 };
 

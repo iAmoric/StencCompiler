@@ -8,6 +8,7 @@
 identifier      [a-zA-Z_][0-9a-zA-Z_]*
 number          [0-9]+
 comment         \/\/.*
+string          \"(\\.|[^"\\])*\"
 
 /* comments like  '// blabla' */
 
@@ -30,6 +31,7 @@ comment         \/\/.*
 {identifier}    { yylval.string = strdup(yytext);return ID; }
 {number}        { yylval.value = atoi(yytext);return NUM; }
 {comment}       { }
+{string}        { yylval.string = strdup(yytext); return STRING;}
 "+"             { return OP_PLUS; }
 "++"            { return OP_INC; }
 "-"             { return OP_MINUS; }
