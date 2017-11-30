@@ -101,7 +101,17 @@ statement:
 
       debug("control_structure");
   }
-  | RETURN NUM ';' {
+  |
+  PRINTI '(' NUM ')' ';' {
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      result->isconstant = true;
+      result->value = $3;
+      $$.result = result;
+      $$.code = quad_gen(E_PRINTI,result,NULL,NULL);
+      debug("printi");
+  }
+  |
+  RETURN NUM ';' {
     struct symbol* result = symbol_newtemp(&symbol_list);
     result->isconstant = true;
     result->value = $2;

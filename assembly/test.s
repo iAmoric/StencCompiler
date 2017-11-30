@@ -30,9 +30,9 @@ sw $t0, _temp_6
 lw $t0, _temp_6
 sw $t0, _b
 
-# print b
-li $v0,1      # appel système pour afficher un entier
-lw $a0, _b 	  # chargement de l'entier à afficher
+# print _temp_7
+li $v0,1
+lw $a0, _temp_7
 syscall
 
 # exit
@@ -49,4 +49,5 @@ _temp_3: .word 1
 _temp_4: .word 0
 _temp_5: .word 0
 _temp_6: .word 0
-_temp_7: .word 0
+_temp_7: .word 4
+_temp_8: .word 0

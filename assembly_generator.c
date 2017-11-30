@@ -149,7 +149,7 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
                     break;
                 case E_PRINTI:
-                    fprintf(file, "print %s\n", result->identifier);
+                    fprintf(file, "# print %s\n", result->identifier);  
                     fprintf(file, "li $v0,1\n");
 
                     if (result->identifier[0] == '_')
@@ -158,6 +158,7 @@ void generator(struct symbol* symbol, struct quad* quad) {
                         fprintf(file, "lw $a0, _%s\n", result->identifier);
 
                     fprintf(file, "syscall\n");
+                    fprintf(file, "\n");
                     break;
     			default:
     				break;
@@ -165,10 +166,10 @@ void generator(struct symbol* symbol, struct quad* quad) {
             quad = quad->next;
     	}
 
-
         fprintf(file, "# exit\n");
         fprintf(file, "li $v0,10\n");
         fprintf(file, "syscall\n");
+
         //.data
         fprintf(file, "\n");
         fprintf(file, "\t.data\n");
@@ -182,6 +183,7 @@ void generator(struct symbol* symbol, struct quad* quad) {
                 fprintf(file, "%d\n", symbol->value);
             else
                 fprintf(file, "0\n");
+
             symbol = symbol->next;
         }
     }

@@ -59,6 +59,9 @@ void quad_print(struct quad* list){
 			case E_DIV:
 				operator_string = "DIV";
 				break;
+			case E_PRINTI:
+				operator_string = "PRINTI";
+				break;
 			default:
 				operator_string = "NOT_DEFINED";
 				break;
