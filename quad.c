@@ -35,7 +35,7 @@ void quad_print(struct quad* list){
 	struct symbol* arg1;
 	struct symbol* arg2;
 	char* operator_string;
-	while(list != NULL){	
+	while(list != NULL){
 		result = list->result;
 		arg1 = list->arg1;
 		arg2 = list->arg2;
