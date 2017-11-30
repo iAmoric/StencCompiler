@@ -35,6 +35,11 @@ li $v0,1
 lw $a0, _temp_7
 syscall
 
+# print b
+li $v0,1
+lw $a0, _b
+syscall
+
 # exit
 li $v0,10
 syscall

@@ -149,7 +149,7 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
                     break;
                 case E_PRINTI:
-                    fprintf(file, "# print %s\n", result->identifier);  
+                    fprintf(file, "# print %s\n", result->identifier);
                     fprintf(file, "li $v0,1\n");
 
                     if (result->identifier[0] == '_')

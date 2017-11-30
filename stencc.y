@@ -111,6 +111,18 @@ statement:
       debug("printi");
   }
   |
+  PRINTI '(' ID ')' ';' {
+      struct symbol* result = symbol_lookup(symbol_list, $3);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s",$3);
+        exit(1);
+      }
+      $$.result = result;
+      struct quad* quad = quad_gen(E_PRINTI,result,NULL,NULL);
+      $$.code = quad;
+      debug("ID = expr");
+  }
+  |
   RETURN NUM ';' {
     struct symbol* result = symbol_newtemp(&symbol_list);
     result->isconstant = true;
