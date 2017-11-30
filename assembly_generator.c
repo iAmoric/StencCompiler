@@ -2,7 +2,7 @@
 
 void generator(struct symbol* symbol, struct quad* quad) {
     FILE* file = NULL;
-    file = fopen("assembly/test.s", "w");
+    file = fopen("assembly/out.s", "w");
 
     if (file != NULL) {
         struct symbol* result;

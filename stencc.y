@@ -15,7 +15,7 @@
   void lex_free();
   struct symbol* symbol_list = NULL;
   struct quad* quad_list = NULL;
-  FILE *yyin;
+  FILE* yyin;
 %}
 %union {
   char* string;
@@ -307,24 +307,34 @@ void yyerror (char *s) {
 }
 
 void debug (char* s){
-#ifdef DEBUG
-fprintf(stderr, "[Yacc] ");
-  fprintf(stderr, "%s\n",s);
-  #endif
+    #ifdef DEBUG
+    fprintf(stderr, "[Yacc] ");
+    fprintf(stderr, "%s\n",s);
+    #endif
 }
 
 int main(int argc, char* argv[]) {
-  yyin = fopen(argv[1], "r");
-  yyparse();
-  printf("-----------------\nSymbol table:\n");
-  symbol_print(symbol_list);
-  printf("-----------------\nQuad list:\n");
-  quad_print(quad_list);
+    if (argc != 2) {
+        fprintf(stderr, "error with arguments\n");
+        exit(1);
+    }
 
-  //generation code assembleur
-  generator(symbol_list, quad_list);
+    yyin = fopen(argv[1], "r");
+    if (yyin == NULL) {
+        fprintf(stderr, "unable to open file %s\n", argv[1]);
+        exit(1);
+    }
 
-  // Be clean.
-  lex_free();
-  return 0;
+    yyparse();
+    printf("-----------------\nSymbol table:\n");
+    symbol_print(symbol_list);
+    printf("-----------------\nQuad list:\n");
+    quad_print(quad_list);
+
+    //generation code assembleur
+    generator(symbol_list, quad_list);
+
+    // Be clean.
+    lex_free();
+    return 0;
 }
