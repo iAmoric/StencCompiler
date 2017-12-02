@@ -17,6 +17,8 @@ struct quad* quad_gen(enum operator,struct symbol*,struct symbol*,struct symbol*
 
 struct quad* quad_add(struct quad*,struct quad*);
 
+struct quad* quad_last(struct quad*);
+
 void quad_print(struct quad*);
 
 #endif

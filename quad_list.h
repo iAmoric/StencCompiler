@@ -14,6 +14,6 @@ struct quad_list* quad_list_new(struct quad*);
 
 struct quad_list* quad_list_concat(struct quad_list*, struct quad_list*);
 
-struct quad_list* quad_list_complete(struct quad_list*, struct quad_list*);
+struct quad_list* quad_list_complete(struct quad_list*, struct symbol*);
 
 #endif

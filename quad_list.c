@@ -1,4 +1,4 @@
-#include "quad_list.c"
+#include "quad_list.h"
 
 struct quad_list* quad_list_new(struct quad* quad){
 	struct quad_list* new_list = malloc(sizeof(struct quad_list));
@@ -18,7 +18,8 @@ struct quad_list* quad_list_concat(struct quad_list* a_list, struct quad_list* b
 struct quad_list* quad_list_complete(struct quad_list* list, struct symbol* goto_){
 	struct quad_list* parcour = list;
 	while(parcour != NULL){
-		parcour->result = goto_;
+		parcour->elt->result = goto_;
+		parcour = parcour->next;
 	}
 	return list;
 }

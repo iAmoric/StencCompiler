@@ -30,6 +30,13 @@ struct quad* quad_add(struct quad* quad_one,struct quad* quad_two){
 	return result;
 }
 
+struct quad* quad_last(struct quad* list){
+	if(list == NULL)return NULL;
+	while(list->next != NULL)list = list->next;
+	return list;
+}
+
+
 void quad_print(struct quad* list){
 	struct symbol* result;
 	struct symbol* arg1;
