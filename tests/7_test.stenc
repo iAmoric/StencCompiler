@@ -1,3 +1,4 @@
+//test pour les boucles while
 int main(){
 	int i = 8;
 	while ( i > 0){

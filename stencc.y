@@ -343,7 +343,7 @@ control_structure:
       quad_list_complete($3.false_list,where_false);
     }
     |
-    FOR '(' ')' '{' statement_list '}' {
+    FOR '('  ')' '{' statement_list '}' {
 
     }
     ;
@@ -416,11 +416,13 @@ condition:
     }
     |
     TRUE {
-
+      $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
+      $$.true_list = quad_list_new($$.code);
     }
     |
     FALSE {
-
+      $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
+      $$.false_list = quad_list_new($$.code);
     }
     |
     condition OP_OR condition {

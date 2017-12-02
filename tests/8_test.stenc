@@ -1,0 +1,12 @@
+//test true et false
+int main(){
+	int a = 8;
+	int b = 7;
+	if( a == 7 || b == 8 || true){
+		a = 7;
+	}
+	if ( a == 7 && false ) {
+		b = a;
+	}
+	return 0;
+}
