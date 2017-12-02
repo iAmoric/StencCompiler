@@ -28,7 +28,7 @@
   }codegen;
 }
 %type <codegen> expression affectation statement 
-%type <codegen> statement_list declaration programme 
+%type <codegen> statement_list declaration programme declaration_affectation
 %type <codegen> mark element condition control_structure
 %token <string> ID STRING
 %token <value> NUM
@@ -85,12 +85,12 @@ statement:
   |
   affectation ';' {
     $$.code = $1.code;
-
     debug("affectation");
   }
   |
   declaration_affectation ';'{
     printf("statement: declare affect\n");
+    $$.code = $1.code;
   }
   |
   expression ';' {
@@ -115,7 +115,7 @@ statement:
   PRINTI '(' ID ')' ';' {
       struct symbol* result = symbol_lookup(symbol_list, $3);
       if(result == NULL){
-        printf("ERROR: undeclared variable -> %s",$3);
+        printf("ERROR: undeclared variable -> %s\n",$3);
         exit(1);
       }
       $$.result = result;
@@ -173,7 +173,7 @@ affectation:
     ID OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
-        printf("ERROR: undeclared variable -> %s",$1);
+        printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
       $$.result = result;
@@ -188,6 +188,18 @@ affectation:
 declaration_affectation:
     INT ID OP_ASSIGN expression {
       debug("INT ID = expr");
+      struct symbol* result = symbol_lookup(symbol_list, $2);
+      if(result == NULL){
+        result = symbol_add(&symbol_list,$2);
+      }else{
+        printf("ERROR: already declared variable -> %s\n",$2);
+        exit(1);
+      }
+      $$.result = result;
+      struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
+      struct quad* code = quad_add($4.code,quad);
+      $$.code = code;
+      debug("int ID = expr");
     }
     ;
 expression:
@@ -241,7 +253,9 @@ expression:
     |
     ID {
       struct symbol* result = symbol_lookup(symbol_list, $1);
-      if(result == NULL)result = symbol_add(&symbol_list, $1);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$1);
+      } 
       $$.result = result;
       $$.code = NULL;
       debug("ID");
@@ -261,6 +275,7 @@ mark:
   {
     $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
     $$.false_list = quad_list_new($$.code);
+    $$.true_list = quad_list_new($$.code);
   }
   ;
 
@@ -305,8 +320,27 @@ control_structure:
       quad_list_complete($3.false_list,where_false);
     }
     |
-    WHILE '(' condition ')' '{' statement_list '}' {
-
+    WHILE '(' condition ')' '{' statement_list mark '}' {
+      debug("while (condition) {statement_list}");
+      struct quad* last_condition = quad_last($3.code);
+      struct quad* code;
+      struct quad* last_statement;
+      struct symbol* where_true = symbol_newtemp_init(&symbol_list,last_condition->number+1);
+      struct symbol* where_false;
+      struct symbol* where_begin = symbol_newtemp_init(&symbol_list,$3.code->number);
+      quad_list_complete($7.true_list,where_begin);
+      quad_list_complete($3.true_list,where_true);
+      code = quad_add($3.code,$6.code);
+      code = quad_add(code,$7.code);
+      $$.code  = code;
+      //dernière instruction a faire dans la boucle
+      if($6.code != NULL){
+        last_statement = quad_last($6.code); 
+      }else{
+        last_statement = $7.code;
+      }
+      where_false = symbol_newtemp_init(&symbol_list,last_statement->number + 1);
+      quad_list_complete($3.false_list,where_false);
     }
     |
     FOR '(' ')' '{' statement_list '}' {
@@ -318,7 +352,9 @@ control_structure:
 element:
   ID {
       struct symbol* result = symbol_lookup(symbol_list, $1);
-      if(result == NULL)result = symbol_add(&symbol_list, $1);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$1);
+      }
       $$.result = result;
       $$.code = NULL;
       debug("ID");
