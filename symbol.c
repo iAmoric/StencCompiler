@@ -36,6 +36,13 @@ struct symbol* symbol_newtemp(struct symbol** table){
     return symbol_add(table, temporary_name);
 }
 
+struct symbol*  symbol_newtemp_init(struct symbol** table,int num){
+  struct symbol* temp = symbol_newtemp(table);
+  temp->isconstant = true;
+  temp->value = num;
+  return temp;
+}
+
 struct symbol* symbol_lookup(struct symbol* table, char* identifier)
 {
     while(table != NULL)

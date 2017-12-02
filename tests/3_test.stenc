@@ -1,11 +1,11 @@
 int main() {
     int a;
-    if (true) {
-        int b;
-    }
-    if (false) {
-        const int c;
-        c = i;
-    }
+    int b;
+    int c;
+    if (a == 5 || b => 6 && c < 7) {
+        a = 3;
+    } else {
+	b = 7;
+    }	
     return 0;
 }

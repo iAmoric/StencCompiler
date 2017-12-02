@@ -46,6 +46,7 @@ void quad_print(struct quad* list){
 		result = list->result;
 		arg1 = list->arg1;
 		arg2 = list->arg2;
+		printf("%d - ",list->number);
 		printf("%s ",result->identifier);
 		switch(list->operator){
 			case E_RETURN:
@@ -71,6 +72,24 @@ void quad_print(struct quad* list){
 				break;
 			case E_PRINTF:
 				operator_string = "PRINTF";
+				break;
+			case E_GOTO:
+				operator_string = "GOTO";
+				break;
+			case E_EQUAL:
+				operator_string = "==";
+				break;
+			case E_SUPERIOR:
+				operator_string = ">";
+				break;
+			case E_INFERIOR:
+				operator_string = "<";
+				break;
+			case E_INFEQUAL:
+				operator_string = "<=";
+				break;
+			case E_SUPEQUAL:
+				operator_string = ">=";
 				break;
 			default:
 				operator_string = "NOT_DEFINED";

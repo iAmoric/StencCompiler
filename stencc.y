@@ -27,7 +27,9 @@
     struct quad_list* false_list;
   }codegen;
 }
-%type <codegen> expression affectation statement statement_list declaration programme
+%type <codegen> expression affectation statement 
+%type <codegen> statement_list declaration programme 
+%type <codegen> mark element condition control_structure
 %token <string> ID STRING
 %token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
@@ -92,8 +94,7 @@ statement:
   }
   |
   expression ';' {
-    //$$.code = $1.code;
-
+      $$.code = $1.code;
       debug("expression");
   }
   |
@@ -256,9 +257,52 @@ expression:
     }
 ;
 
+mark:
+  {
+    $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
+    $$.false_list = quad_list_new($$.code);
+  }
+  ;
+
+
 control_structure:
     IF '(' condition ')' '{' statement_list '}' {
-
+      debug("if (condition) {statement_list}");
+      struct quad* last_condition = quad_last($3.code);
+      struct quad* last_statement;
+      struct symbol* where_true = symbol_newtemp_init(&symbol_list,last_condition->number+1);
+      struct symbol* where_false;
+      quad_list_complete($3.true_list,where_true);
+      $$.code = quad_add($3.code,$6.code);
+      if($6.code != NULL){
+        last_statement = quad_last($6.code); 
+      }else{
+        last_statement = quad_last($3.code);
+      }
+      where_false = symbol_newtemp_init(&symbol_list,last_statement->number + 1);
+      quad_list_complete($3.false_list,where_false);
+    }
+    |
+    IF '(' condition ')' '{' statement_list '}' ELSE '{' mark statement_list '}'{
+      debug("if (condition) {statement_list} else { statement_list}");
+      struct quad* last_condition = quad_last($3.code);
+      struct quad* code;
+      struct quad* last_statement;
+      struct symbol* where_true = symbol_newtemp_init(&symbol_list,last_condition->number+1);
+      struct symbol* where_false;
+      $3.false_list = quad_list_concat($3.false_list,$10.false_list);
+      quad_list_complete($3.true_list,where_true);
+      code = quad_add($3.code,$6.code);
+      code = quad_add(code,$10.code);
+      code = quad_add(code,$11.code);
+      $$.code  = code;
+      if($11.code != NULL){
+        last_statement = $11.code; 
+      }else{
+        last_statement = $10.code;
+      }
+      where_false = symbol_newtemp_init(&symbol_list,last_statement->number + 1);
+      quad_list_complete($3.false_list,where_false);
     }
     |
     WHILE '(' condition ')' '{' statement_list '}' {
@@ -270,9 +314,69 @@ control_structure:
     }
     ;
 
-condition:
-    ID OP_EQUAL NUM {
 
+element:
+  ID {
+      struct symbol* result = symbol_lookup(symbol_list, $1);
+      if(result == NULL)result = symbol_add(&symbol_list, $1);
+      $$.result = result;
+      $$.code = NULL;
+      debug("ID");
+  }
+  |
+  NUM {
+     $$.result = symbol_newtemp_init(&symbol_list,$1);
+  }
+
+condition:
+    element OP_EQUAL element {
+      debug("elt == elt");
+      struct quad* codeTrue = quad_gen(E_EQUAL,NULL,$1.result,$3.result);
+      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
+      struct quad* code = quad_add(codeTrue,codeFalse);
+      $$.code = code;
+      $$.true_list = quad_list_new(codeTrue);
+      $$.false_list = quad_list_new(codeFalse);
+    }
+    |
+    element OP_SUP element {
+      debug("elt > elt");
+      struct quad* codeTrue = quad_gen(E_SUPERIOR,NULL,$1.result,$3.result);
+      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
+      struct quad* code = quad_add(codeTrue,codeFalse);
+      $$.code = code;
+      $$.true_list = quad_list_new(codeTrue);
+      $$.false_list = quad_list_new(codeFalse);
+    }
+    |
+    element OP_INF element {
+      debug("elt < elt");
+      struct quad* codeTrue = quad_gen(E_INFERIOR,NULL,$1.result,$3.result);
+      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
+      struct quad* code = quad_add(codeTrue,codeFalse);
+      $$.code = code;
+      $$.true_list = quad_list_new(codeTrue);
+      $$.false_list = quad_list_new(codeFalse);
+    }
+    |
+    element OP_SUP_EQUAL element {
+      debug("elt >= elt");
+      struct quad* codeTrue = quad_gen(E_SUPEQUAL,NULL,$1.result,$3.result);
+      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
+      struct quad* code = quad_add(codeTrue,codeFalse);
+      $$.code = code;
+      $$.true_list = quad_list_new(codeTrue);
+      $$.false_list = quad_list_new(codeFalse);
+    }
+    |
+    element OP_INF_EQUAL element {
+      debug("elt <= elt");
+      struct quad* codeTrue = quad_gen(E_INFEQUAL,NULL,$1.result,$3.result);
+      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
+      struct quad* code = quad_add(codeTrue,codeFalse);
+      $$.code = code;
+      $$.true_list = quad_list_new(codeTrue);
+      $$.false_list = quad_list_new(codeFalse);
     }
     |
     TRUE {
@@ -284,19 +388,39 @@ condition:
     }
     |
     condition OP_OR condition {
-
+      debug("condition || condition");
+      $$.true_list = quad_list_concat($1.true_list,$3.true_list);
+      $$.false_list = $3.false_list;
+      struct symbol* where_to_go = symbol_newtemp(&symbol_list);
+      where_to_go->isconstant = true;
+      where_to_go->value = $3.code->number;
+      quad_list_complete($1.false_list,where_to_go);
+      $$.code = quad_add($1.code,$3.code);
     }
     |
     condition OP_AND condition {
-
+      debug("condition && condition");
+      $$.false_list = quad_list_concat($1.false_list,$3.false_list);
+      struct symbol* where_to_go = symbol_newtemp(&symbol_list);
+      where_to_go->isconstant = true;
+      where_to_go->value = $3.code->number;
+      quad_list_complete($1.true_list,where_to_go);
+      $$.true_list = $3.true_list;
+      $$.code = quad_add($1.code,$3.code);
     }
     |
     OP_NOT condition {
-
+      debug("!condition");
+      $$.true_list = $2.false_list;
+      $$.false_list = $2.true_list;
+      $$.code = $2.code;
     }
     |
     '(' condition ')' {
-
+      debug("( condition ) ");
+      $$.true_list = $2.true_list;
+      $$.false_list = $2.false_list;
+      $$.code = $2.code;
     }
     ;
 
