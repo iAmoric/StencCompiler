@@ -1,0 +1,27 @@
+//test all
+int main() {
+	int i;
+	int b = 5;
+	for (i = 1; i < 6; i = i + 1) {
+		if (i > 3) {
+            b = b + i;
+            printf("b = ");
+            printi(b);
+            printf("\n");
+        }
+        else {  //commentaire
+            int c = 0;
+            while (c <= 5) {
+                b = b + b * c;
+                c = c + 1;
+                printf("b = ");
+                printi(b);
+                printf("\n");
+            }
+        }
+	}
+    printf("b = ");
+    printi(b);
+    printf("\n");
+	return 0;
+}
