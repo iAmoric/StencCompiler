@@ -1,6 +1,6 @@
 #include "assembly_generator.h"
 
-void generator(struct symbol* symbol, struct quad* quad) {
+void generator(struct symbol* symbol_list, struct quad* quad) {
     FILE* file = NULL;
     file = fopen("assembly/out.s", "w");
 
@@ -8,8 +8,15 @@ void generator(struct symbol* symbol, struct quad* quad) {
         struct symbol* result;
     	struct symbol* arg1;
     	struct symbol* arg2;
+        struct symbol* gotoLabel;
 
-        fprintf(file, "\t.text\n");
+        GotoList* gotoList = malloc(sizeof(*gotoList));
+      	if (gotoList == NULL) {
+      		exit(EXIT_FAILURE);
+      	}
+        gotoList->first = NULL;
+
+        fprintf(file, ".text\n");
         fprintf(file, "main:\n");
 
         //.text
@@ -17,22 +24,19 @@ void generator(struct symbol* symbol, struct quad* quad) {
     		result = quad->result;
     		arg1 = quad->arg1;
     		arg2 = quad->arg2;
+            int index = quad->number;
+            if (isInList(gotoList, index)){
+                fprintf(file, "\tlabel%d:\n", index);
+            }
+
     		switch(quad->operator){
     			case E_RETURN:
     				break;
     			case E_ASSIGN:
-                    fprintf(file, "# %s = %s\n", result->identifier, arg1->identifier);
+                    fprintf(file, "\t\t# %s = %s\n", result->identifier, arg1->identifier);
                     if (arg1 != NULL && arg2 == NULL) {
-                        if (arg1->identifier[0] == '_')
-                            fprintf(file, "lw $t0, %s\n", arg1->identifier);
-                        else
-                            fprintf(file, "lw $t0, _%s\n", arg1->identifier);
-
-                        if (result->identifier[0] == '_')
-                            fprintf(file, "sw $t0, %s\n", result->identifier);
-                        else
-                            fprintf(file, "sw $t0, _%s\n", result->identifier);
-
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
                     }
                     else {
@@ -41,25 +45,12 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
     				break;
     			case E_PLUS:
-                    fprintf(file, "# %s = %s + %s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\t# %s = %s + %s\n", result->identifier, arg1->identifier, arg2->identifier);
                     if (arg1 != NULL && arg2 != NULL) {
-                        if (arg1->identifier[0] == '_')
-                            fprintf(file, "lw $t0, %s\n", arg1->identifier);
-                        else
-                            fprintf(file, "lw $t0, _%s\n", arg1->identifier);
-
-                        if (arg2->identifier[0] == '_')
-                            fprintf(file, "lw $t1, %s\n", arg2->identifier);
-                        else
-                            fprintf(file, "lw $t1, _%s\n", arg2->identifier);
-
-                        fprintf(file, "add $t0, $t0, $t1\n");
-
-                        if (result->identifier[0] == '_')
-                            fprintf(file, "sw $t0, %s\n", result->identifier);
-                        else
-                            fprintf(file, "sw $t0, _%s\n", result->identifier);
-
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        fprintf(file, "\t\tadd $t0, $t0, $t1\n");
+                        fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
                     }
                     else {
@@ -68,25 +59,12 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
                     break;
     			case E_MINUS:
-                    fprintf(file, "# %s = %s - %s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\t# %s = %s - %s\n", result->identifier, arg1->identifier, arg2->identifier);
                     if (arg1 != NULL && arg2 != NULL) {
-                        if (arg1->identifier[0] == '_')
-                            fprintf(file, "lw $t0, %s\n", arg1->identifier);
-                        else
-                            fprintf(file, "lw $t0, _%s\n", arg1->identifier);
-
-                        if (arg2->identifier[0] == '_')
-                            fprintf(file, "lw $t1, %s\n", arg2->identifier);
-                        else
-                            fprintf(file, "lw $t1, _%s\n", arg2->identifier);
-
-                        fprintf(file, "sub $t0, $t0, $t1\n");
-
-                        if (result->identifier[0] == '_')
-                            fprintf(file, "sw $t0, %s\n", result->identifier);
-                        else
-                            fprintf(file, "sw $t0, _%s\n", result->identifier);
-
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        fprintf(file, "\t\tsub $t0, $t0, $t1\n");
+                        fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
                     }
                     else {
@@ -95,25 +73,12 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
     				break;
     			case E_MULT:
-                    fprintf(file, "# %s = %s * %s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\t# %s = %s * %s\n", result->identifier, arg1->identifier, arg2->identifier);
                     if (arg1 != NULL && arg2 != NULL) {
-                        if (arg1->identifier[0] == '_')
-                            fprintf(file, "lw $t0, %s\n", arg1->identifier);
-                        else
-                            fprintf(file, "lw $t0, _%s\n", arg1->identifier);
-
-                        if (arg2->identifier[0] == '_')
-                            fprintf(file, "lw $t1, %s\n", arg2->identifier);
-                        else
-                            fprintf(file, "lw $t1, _%s\n", arg2->identifier);
-
-                        fprintf(file, "mul $t0, $t0, $t1\n");
-
-                        if (result->identifier[0] == '_')
-                            fprintf(file, "sw $t0, %s\n", result->identifier);
-                        else
-                            fprintf(file, "sw $t0, _%s\n", result->identifier);
-
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        fprintf(file, "\t\tmul $t0, $t0, $t1\n");
+                        fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
                     }
                     else {
@@ -122,25 +87,12 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
     				break;
     			case E_DIV:
-                    fprintf(file, "# %s = %s / %s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\t# %s = %s / %s\n", result->identifier, arg1->identifier, arg2->identifier);
                     if (arg1 != NULL && arg2 != NULL) {
-                        if (arg1->identifier[0] == '_')
-                            fprintf(file, "lw $t0, %s\n", arg1->identifier);
-                        else
-                            fprintf(file, "lw $t0, _%s\n", arg1->identifier);
-
-                        if (arg2->identifier[0] == '_')
-                            fprintf(file, "lw $t1, %s\n", arg2->identifier);
-                        else
-                            fprintf(file, "lw $t1, _%s\n", arg2->identifier);
-
-                        fprintf(file, "div $t0, $t0, $t1\n");
-
-                        if (result->identifier[0] == '_')
-                            fprintf(file, "sw $t0, %s\n", result->identifier);
-                        else
-                            fprintf(file, "sw $t0, _%s\n", result->identifier);
-
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        fprintf(file, "\t\tdiv $t0, $t0, $t1\n");
+                        fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
                     }
                     else {
@@ -149,28 +101,52 @@ void generator(struct symbol* symbol, struct quad* quad) {
                     }
                     break;
                 case E_PRINTI:
-                    fprintf(file, "# printi %s\n", result->identifier);
-                    fprintf(file, "li $v0,1\n");
-
-                    if (result->identifier[0] == '_')
-                        fprintf(file, "lw $a0, %s\n", result->identifier);
-                    else
-                        fprintf(file, "lw $a0, _%s\n", result->identifier);
-
-                    fprintf(file, "syscall\n");
+                    fprintf(file, "\t\t# printi %s\n", result->identifier);
+                    fprintf(file, "\t\tli $v0, 1\n");
+                    fprintf(file, "\t\tlw $a0, _%s\n", result->identifier);
+                    fprintf(file, "\t\tsyscall\n");
                     fprintf(file, "\n");
                     break;
                 case E_PRINTF:
-                    fprintf(file, "# printf %s\n", result->identifier);
-                    fprintf(file, "li $v0,4\n");
-
-                    if (result->identifier[0] == '_')
-                        fprintf(file, "la $a0, %s\n", result->identifier);
-                    else
-                        fprintf(file, "la $a0, _%s\n", result->identifier);
-
-                    fprintf(file, "syscall\n");
+                    fprintf(file, "\t\t# printf %s\n", result->identifier);
+                    fprintf(file, "\t\tli $v0, 4\n");
+                    fprintf(file, "\t\tla $a0, _%s\n", result->identifier);
+                    fprintf(file, "\t\tsyscall\n");
                     fprintf(file, "\n");
+                    break;
+                case E_EQUAL:
+                    gotoLabel = symbol_lookup(symbol_list, result->identifier);
+                    if (gotoLabel->value > index) {
+                        addLabel(gotoList, gotoLabel->value);
+                    }
+                    fprintf(file, "\t\t# goto label%d if %s == %s\n", result->value, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
+                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    fprintf(file, "\t\tbeq $t0, $t1, label%d\n",result->value);
+                    fprintf(file, "\n");
+                    break;
+                case E_SUPEQUAL:
+                    gotoLabel = symbol_lookup(symbol_list, result->identifier);
+                    if (gotoLabel->value > index) {
+                        addLabel(gotoList, gotoLabel->value);
+                    }
+                    fprintf(file, "\t\t# goto label%d if %s >= %s\n", result->value, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
+                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    fprintf(file, "\t\tbge $t0, $t1, label%d\n",result->value);
+                    fprintf(file, "\n");
+                    break;
+                case E_GOTO:
+                    //add goto label in list
+                    printf("DEBUG %s\n", result->identifier);
+                    gotoLabel = symbol_lookup(symbol_list, result->identifier);
+                    if (gotoLabel->value > index) {
+                        addLabel(gotoList, gotoLabel->value);
+                    }
+                    fprintf(file, "\t\t# goto label%d\n", result->value);
+                    fprintf(file, "\t\tj label%d\n", result->value);
+                    fprintf(file, "\n");
+
                     break;
     			default:
     				break;
@@ -178,29 +154,53 @@ void generator(struct symbol* symbol, struct quad* quad) {
             quad = quad->next;
     	}
 
-        fprintf(file, "# exit\n");
-        fprintf(file, "li $v0,10\n");
-        fprintf(file, "syscall\n");
+        fprintf(file, "\t\t# exit\n");
+        fprintf(file, "\t\tli $v0,10\n");
+        fprintf(file, "\t\tsyscall\n");
 
         //.data
         fprintf(file, "\n");
-        fprintf(file, "\t.data\n");
-        while (symbol != NULL) {
-            if (symbol->identifier[0] == '_')
-                fprintf(file, "%s: ", symbol->identifier);
-            else
-                fprintf(file, "_%s: ", symbol->identifier);
+        fprintf(file, ".data\n");
+        while (symbol_list != NULL) {
+            fprintf(file, "\t_%s: ", symbol_list->identifier);
 
-            if (symbol->isconstant) {
-                if (symbol->string == NULL)
-                    fprintf(file, ".word %d\n", symbol->value);
+            if (symbol_list->isconstant) {
+                if (symbol_list->string == NULL)
+                    fprintf(file, ".word %d\n", symbol_list->value);
                 else
-                    fprintf(file, ".asciiz %s\n", symbol->string);
+                    fprintf(file, ".asciiz %s\n", symbol_list->string);
             }
             else
                 fprintf(file, ".word 0\n");
 
-            symbol = symbol->next;
+            symbol_list = symbol_list->next;
         }
+
+        free(gotoList);
     }
+}
+
+void addLabel(GotoList* gotoList, int value) {
+    Goto* g = malloc(sizeof(*g));
+    if (g == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    g->index = value;
+    g->next = gotoList->first;
+    gotoList->first = g;
+}
+
+bool isInList(GotoList* gotoList, int index) {
+    Goto* g = gotoList->first;
+    Goto* gprev = NULL;
+    while ( g != NULL) {
+        if (g->index == index) {
+            //gprev->next = g->next;
+            //free(g);
+            return true;
+        }
+        g = g->next;
+        gprev = g;
+    }
+    return false;
 }

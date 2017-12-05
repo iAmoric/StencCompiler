@@ -8,5 +8,11 @@ int main(){
 	if ( a == 7 && false ) {
 		b = a;
 	}
+
+	printf("a = ");
+	printi(a);
+	printf("\nb = ");
+	printi(b);
+	printf("\n");
 	return 0;
 }

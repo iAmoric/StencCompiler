@@ -9,6 +9,21 @@
 #include "quad_list.h"
 #include "quad.h"
 
+typedef struct Goto Goto;
+struct Goto
+{
+	int index;
+    Goto *next;
+};
+
+typedef struct GotoList GotoList;
+struct GotoList
+{
+    Goto *first;
+};
+
 void generator(struct symbol*, struct quad*);
+void addLabel(GotoList* gotoList, int value);
+bool isInList(GotoList* gotoList, int index);
 
 #endif
