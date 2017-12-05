@@ -15,11 +15,21 @@ struct quad_list* quad_list_concat(struct quad_list* a_list, struct quad_list* b
 	return a_list;
 }
 
-struct quad_list* quad_list_complete(struct quad_list* list, struct symbol* goto_){
+void quad_list_complete(struct quad_list* list, struct symbol* goto_){
 	struct quad_list* parcour = list;
 	while(parcour != NULL){
 		parcour->elt->result = goto_;
 		parcour = parcour->next;
 	}
-	return list;
+	quad_list_free(list);
+}
+
+void quad_list_free(struct quad_list* list){
+	struct quad_list* parcours = list;
+	struct quad_list* before;
+	while(parcours != NULL){
+		before = parcours;
+		parcours = parcours->next;
+		free(before);
+	}
 }

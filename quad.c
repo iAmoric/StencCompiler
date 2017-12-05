@@ -12,6 +12,7 @@ struct quad* quad_gen(enum operator op,struct symbol* result,struct symbol* arg1
 	new_quad->arg1 = arg1;
 	new_quad->arg2 = arg2;
 	new_quad->number =  quad_number;
+	new_quad->need_label = false;
 	quad_number++;
 	return new_quad;
 }
@@ -36,6 +37,16 @@ struct quad* quad_last(struct quad* list){
 	return list;
 }
 
+
+void quad_free(struct quad* list){
+	struct quad* parcours = list;
+	struct quad* before;
+	while(parcours != NULL){
+		before = parcours;
+		parcours = parcours->next;
+		free(before);
+	}
+}
 
 void quad_print(struct quad* list){
 	struct symbol* result;

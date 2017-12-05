@@ -53,6 +53,7 @@
 
 axiom:
     programme{
+      //Axiom de la grammaire
       quad_list = $1.code;
       printf("Match !!!\n");
       return 0;
@@ -61,6 +62,7 @@ axiom:
 
 programme:
     INT MAIN '(' ')' '{' statement_list '}'{
+      //détection du main
       debug("programme");
       $$.code = $6.code;
     }
@@ -80,16 +82,18 @@ statement_list:
 
 statement:
   declaration ';' {
-    debug("declaration");
+      //une déclaration de génère pas de code
+      debug("declaration");
     }
   |
   affectation ';' {
+    debug("affectation");
     $$.code = $1.code;
     debug("affectation");
   }
   |
   declaration_affectation ';'{
-    printf("statement: declare affect\n");
+    debug("declare & affect");
     $$.code = $1.code;
   }
   |
@@ -99,7 +103,7 @@ statement:
   }
   |
   control_structure {
-
+      $$.code = $1.code;
       debug("control_structure");
   }
   |
@@ -176,11 +180,45 @@ affectation:
         printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
+      if(result->isconstant){
+        printf("ERROR: try to modify a constant  -> %s\n",$1);
+        exit(1);
+      }
       $$.result = result;
       struct quad* quad = quad_gen(E_ASSIGN,result,$3.result,NULL);
       struct quad* code = quad_add($3.code,quad);
       $$.code = code;
       debug("ID = expr");
+    }
+    | ID OP_INC {
+      struct symbol* result = symbol_lookup(symbol_list, $1);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
+      }
+      if(result->isconstant){
+        printf("ERROR: try to modify a constant  -> %s\n",$1);
+        exit(1);
+      }
+      $$.result = result;
+      struct symbol* temp = symbol_newtemp_init(&symbol_list,1);
+      struct quad* quad = quad_gen(E_PLUS,result,result,temp);
+      $$.code = quad;
+    }
+    | ID OP_DEC {
+      struct symbol* result = symbol_lookup(symbol_list, $1);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
+      }
+      if(result->isconstant){
+        printf("ERROR: try to modify a constant  -> %s\n",$1);
+        exit(1);
+      }
+      $$.result = result;
+      struct symbol* temp = symbol_newtemp_init(&symbol_list,1);
+      struct quad* quad = quad_gen(E_MINUS,result,result,temp);
+      $$.code = quad;
     }
 
     ;
@@ -199,7 +237,22 @@ declaration_affectation:
       struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
       struct quad* code = quad_add($4.code,quad);
       $$.code = code;
-      debug("int ID = expr");
+    }
+    |
+    CONST INT ID OP_ASSIGN expression {
+      debug("CONST INT ID = expr");
+      struct symbol* result = symbol_lookup(symbol_list, $3);
+      if(result == NULL){
+        result = symbol_add(&symbol_list,$3);
+        result->isconstant = true;
+      }else{
+        printf("ERROR: already declared variable -> %s\n",$3);
+        exit(1);
+      }
+      $$.result = result;
+      struct quad* quad = quad_gen(E_ASSIGN,result,$5.result,NULL);
+      struct quad* code = quad_add($5.code,quad);
+      $$.code = code;
     }
     ;
 expression:
@@ -225,10 +278,17 @@ expression:
     }
     |
     OP_MINUS expression {
-
+      debug("- expr");
+      struct symbol* result = symbol_newtemp(&symbol_list);
+      struct symbol * temp  = symbol_newtemp_init(&symbol_list,0);
+      $$.result = result;
+      struct quad* quad = quad_gen(E_MINUS,result,temp,$2.result);
+      struct quad* code = quad_add($2.code,quad);
+      $$.code = code;
     }
     |
     expression OP_MULTI expression {
+      debug("expr * expr");
       struct symbol* result = symbol_newtemp(&symbol_list);
       $$.result = result;
       struct quad* quad = quad_gen(E_MULT,result,$1.result,$3.result);
@@ -238,6 +298,7 @@ expression:
     }
     |
     expression OP_DIV expression {
+      debug("expr / expr");
       struct symbol* result = symbol_newtemp(&symbol_list);
       $$.result = result;
       struct quad* quad = quad_gen(E_DIV,result,$1.result,$3.result);
@@ -247,6 +308,7 @@ expression:
     }
     |
     '(' expression ')'{
+      debug("(  expr ) ");
       $$.result = $2.result;
       $$.code = $2.code;
     }
@@ -330,6 +392,7 @@ control_structure:
       struct symbol* where_begin = symbol_newtemp_init(&symbol_list,$3.code->number);
       quad_list_complete($7.true_list,where_begin);
       quad_list_complete($3.true_list,where_true);
+      $3.code->need_label = true;
       code = quad_add($3.code,$6.code);
       code = quad_add(code,$7.code);
       $$.code  = code;
@@ -344,11 +407,14 @@ control_structure:
     }
     |
     FOR '('affectation ';' condition ';' affectation mark ')' '{' statement_list mark'}' {
+      debug("for (affectation; condition; affectation){ statement_list } ");
       struct quad* code = quad_add($3.code,$5.code);
       code = quad_add(code,$7.code);
       code = quad_add(code,$8.code);
       code = quad_add(code,$11.code);
       code = quad_add(code,$12.code);
+      $5.code->need_label = true;
+      $7.code->need_label = true;
       struct symbol* where_false =  symbol_newtemp_init(&symbol_list,$12.code->number + 1);
       struct symbol* where_true =  symbol_newtemp_init(&symbol_list,$8.code->number + 1);
       struct symbol* where_begin_condition = symbol_newtemp_init(&symbol_list,$5.code->number);
@@ -375,6 +441,7 @@ element:
   |
   NUM {
      $$.result = symbol_newtemp_init(&symbol_list,$1);
+     debug("NUM");
   }
 
 condition:
@@ -431,11 +498,13 @@ condition:
     TRUE {
       $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
       $$.true_list = quad_list_new($$.code);
+      debug("true");
     }
     |
     FALSE {
       $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
       $$.false_list = quad_list_new($$.code);
+      debug("false");
     }
     |
     condition OP_OR condition {
@@ -511,5 +580,7 @@ int main(int argc, char* argv[]) {
 
     // Be clean.
     lex_free();
+    quad_free(quad_list);
+    symbol_free(symbol_list);
     return 0;
 }

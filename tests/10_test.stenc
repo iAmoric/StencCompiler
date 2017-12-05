@@ -1,0 +1,6 @@
+//test errreur sém
+int main(){
+	const int i = 5;
+	i = i + 5;
+	return 0;
+}
