@@ -25,7 +25,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
     		arg1 = quad->arg1;
     		arg2 = quad->arg2;
             int index = quad->number;
-            if (isInList(gotoList, index)){
+            if (isInList(gotoList, index) || quad->need_label){
                 fprintf(file, "\tlabel%d:\n", index);
             }
 
@@ -125,6 +125,28 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     fprintf(file, "\t\tbeq $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
+                case E_DIFFERENT:
+                    gotoLabel = symbol_lookup(symbol_list, result->identifier);
+                    if (gotoLabel->value > index) {
+                        addLabel(gotoList, gotoLabel->value);
+                    }
+                    fprintf(file, "\t\t# goto label%d if %s != %s\n", result->value, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
+                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    fprintf(file, "\t\tbne $t0, $t1, label%d\n",result->value);
+                    fprintf(file, "\n");
+                    break;
+                case E_INFEQUAL:
+                    gotoLabel = symbol_lookup(symbol_list, result->identifier);
+                    if (gotoLabel->value > index) {
+                        addLabel(gotoList, gotoLabel->value);
+                    }
+                    fprintf(file, "\t\t# goto label%d if %s <= %s\n", result->value, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
+                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    fprintf(file, "\t\tble $t0, $t1, label%d\n",result->value);
+                    fprintf(file, "\n");
+                    break;
                 case E_SUPEQUAL:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
@@ -136,9 +158,30 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     fprintf(file, "\t\tbge $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
+                case E_SUPERIOR:
+                    gotoLabel = symbol_lookup(symbol_list, result->identifier);
+                    if (gotoLabel->value > index) {
+                        addLabel(gotoList, gotoLabel->value);
+                    }
+                    fprintf(file, "\t\t# goto label%d if %s > %s\n", result->value, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
+                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    fprintf(file, "\t\tbgt $t0, $t1, label%d\n",result->value);
+                    fprintf(file, "\n");
+                    break;
+                case E_INFERIOR:
+                    gotoLabel = symbol_lookup(symbol_list, result->identifier);
+                    if (gotoLabel->value > index) {
+                        addLabel(gotoList, gotoLabel->value);
+                    }
+                    fprintf(file, "\t\t# goto label%d if %s < %s\n", result->value, arg1->identifier, arg2->identifier);
+                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
+                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    fprintf(file, "\t\tblt $t0, $t1, label%d\n",result->value);
+                    fprintf(file, "\n");
+                    break;
                 case E_GOTO:
                     //add goto label in list
-                    printf("DEBUG %s\n", result->identifier);
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
                         addLabel(gotoList, gotoLabel->value);

@@ -3,6 +3,8 @@ int main(){
 	int i = 8;
 	while ( i > 0){
 		i = i - 1;
+		printi(i);
+		printf("\n");
 	}
 	return 0;
 }
