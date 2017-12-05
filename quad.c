@@ -12,6 +12,7 @@ struct quad* quad_gen(enum operator op,struct symbol* result,struct symbol* arg1
 	new_quad->arg1 = arg1;
 	new_quad->arg2 = arg2;
 	new_quad->number =  quad_number;
+	new_quad->need_label = false;
 	quad_number++;
 	return new_quad;
 }

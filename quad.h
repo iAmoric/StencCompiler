@@ -2,11 +2,12 @@
 #define _QUAD_H_
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "operator.h"
-
 struct quad{
 	enum operator operator;
 	int number;
+	bool need_label;
 	struct symbol* result;
 	struct symbol* arg1;
 	struct symbol* arg2;
