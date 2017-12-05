@@ -69,3 +69,17 @@ void symbol_print(struct symbol* symbol)
         symbol = symbol->next;
     }
 }
+
+void symbol_free(struct symbol* list){
+    struct symbol* parcours = list;
+    struct symbol* before;
+    while(parcours != NULL){
+        before = parcours;
+        parcours = parcours->next;
+        free(before->identifier);
+        if(before->string != NULL){
+            free(before->string);
+        }
+        free(before);
+    }
+}

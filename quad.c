@@ -38,6 +38,16 @@ struct quad* quad_last(struct quad* list){
 }
 
 
+void quad_free(struct quad* list){
+	struct quad* parcours = list;
+	struct quad* before;
+	while(parcours != NULL){
+		before = parcours;
+		parcours = parcours->next;
+		free(before);
+	}
+}
+
 void quad_print(struct quad* list){
 	struct symbol* result;
 	struct symbol* arg1;

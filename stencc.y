@@ -53,6 +53,7 @@
 
 axiom:
     programme{
+      //Axiom de la grammaire
       quad_list = $1.code;
       printf("Match !!!\n");
       return 0;
@@ -61,6 +62,7 @@ axiom:
 
 programme:
     INT MAIN '(' ')' '{' statement_list '}'{
+      //détection du main
       debug("programme");
       $$.code = $6.code;
     }
@@ -80,16 +82,18 @@ statement_list:
 
 statement:
   declaration ';' {
-    debug("declaration");
+      //une déclaration de génère pas de code
+      debug("declaration");
     }
   |
   affectation ';' {
+    debug("affectation");
     $$.code = $1.code;
     debug("affectation");
   }
   |
   declaration_affectation ';'{
-    printf("statement: declare affect\n");
+    debug("declare & affect");
     $$.code = $1.code;
   }
   |
@@ -99,7 +103,7 @@ statement:
   }
   |
   control_structure {
-
+      $$.code = $1.code;
       debug("control_structure");
   }
   |
@@ -176,6 +180,10 @@ affectation:
         printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
+      if(result->isconstant){
+        printf("ERROR: try to modify a constant  -> %s\n",$1);
+        exit(1);
+      }
       $$.result = result;
       struct quad* quad = quad_gen(E_ASSIGN,result,$3.result,NULL);
       struct quad* code = quad_add($3.code,quad);
@@ -188,6 +196,10 @@ affectation:
         printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
+      if(result->isconstant){
+        printf("ERROR: try to modify a constant  -> %s\n",$1);
+        exit(1);
+      }
       $$.result = result;
       struct symbol* temp = symbol_newtemp_init(&symbol_list,1);
       struct quad* quad = quad_gen(E_PLUS,result,result,temp);
@@ -197,6 +209,10 @@ affectation:
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
+      }
+      if(result->isconstant){
+        printf("ERROR: try to modify a constant  -> %s\n",$1);
         exit(1);
       }
       $$.result = result;
@@ -221,7 +237,22 @@ declaration_affectation:
       struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
       struct quad* code = quad_add($4.code,quad);
       $$.code = code;
-      debug("int ID = expr");
+    }
+    |
+    CONST INT ID OP_ASSIGN expression {
+      debug("CONST INT ID = expr");
+      struct symbol* result = symbol_lookup(symbol_list, $3);
+      if(result == NULL){
+        result = symbol_add(&symbol_list,$3);
+        result->isconstant = true;
+      }else{
+        printf("ERROR: already declared variable -> %s\n",$3);
+        exit(1);
+      }
+      $$.result = result;
+      struct quad* quad = quad_gen(E_ASSIGN,result,$5.result,NULL);
+      struct quad* code = quad_add($5.code,quad);
+      $$.code = code;
     }
     ;
 expression:
@@ -549,5 +580,7 @@ int main(int argc, char* argv[]) {
 
     // Be clean.
     lex_free();
+    quad_free(quad_list);
+    symbol_free(symbol_list);
     return 0;
 }

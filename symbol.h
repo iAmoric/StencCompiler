@@ -10,7 +10,7 @@ struct symbol {
   char* identifier;
   bool isconstant;
   int value; // seulement si c'est une constante
-  char* string;
+  char* string; //pour le print
   struct symbol* next;
 };
 
@@ -20,4 +20,5 @@ struct symbol* 	symbol_newtemp_init(struct symbol**,int);
 struct symbol* 	symbol_lookup(struct symbol*, char*);
 struct symbol* 	symbol_add(struct symbol**, char*);
 void 			symbol_print(struct symbol*);
+void 			symbol_free(struct symbol*);
 #endif

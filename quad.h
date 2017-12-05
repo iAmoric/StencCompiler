@@ -22,4 +22,5 @@ struct quad* quad_last(struct quad*);
 
 void quad_print(struct quad*);
 
+void quad_free(struct quad*);
 #endif
