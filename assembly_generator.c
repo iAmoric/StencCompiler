@@ -220,14 +220,14 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
 
 void addLabel(GotoList** listHead, int value) {
     if (*listHead == NULL) {
-        GotoList* gotoLabel = malloc(sizeof(*listHead));
+        GotoList* gotoLabel = malloc(sizeof(GotoList));
         gotoLabel->index = value;
         gotoLabel->next = NULL;
         *listHead = gotoLabel;
     }
     else {
         GotoList* gotoLabel = *listHead;
-        GotoList* newLabel = malloc(sizeof(*newLabel));
+        GotoList* newLabel = malloc(sizeof(GotoList));
         newLabel->next = NULL;
         newLabel->index = value;
         while (gotoLabel->next != NULL) {

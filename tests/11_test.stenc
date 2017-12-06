@@ -6,7 +6,7 @@ int main() {
     printf("a = ");
     printi(a);
     printf("\n");
-	for (i = 1; i < 6; i = i + 1) {
+	for (i = 1; i < 6; i++) {
 		if (i > 3) {
             b = b + i;
             printf("b = ");
@@ -14,10 +14,10 @@ int main() {
             printf("\n");
         }
         else {  //commentaire
-            int c = 0;
+            int c = -b;
             while (c <= 5) {
                 b = b + b * c;
-                c = c + 1;
+                c--;
                 printf("b = ");
                 printi(b);
                 printf("\n");
