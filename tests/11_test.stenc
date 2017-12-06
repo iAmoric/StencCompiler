@@ -2,6 +2,10 @@
 int main() {
 	int i;
 	int b = 5;
+    int a = b + 4;
+    printf("a = ");
+    printi(a);
+    printf("\n");
 	for (i = 1; i < 6; i = i + 1) {
 		if (i > 3) {
             b = b + i;

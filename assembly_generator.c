@@ -10,11 +10,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
     	struct symbol* arg2;
         struct symbol* gotoLabel;
 
-        GotoList* gotoList = malloc(sizeof(*gotoList));
-      	if (gotoList == NULL) {
-      		exit(EXIT_FAILURE);
-      	}
-        gotoList->first = NULL;
+        GotoList* listHead = NULL;
 
         fprintf(file, ".text\n");
         fprintf(file, "main:\n");
@@ -25,13 +21,11 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
     		arg1 = quad->arg1;
     		arg2 = quad->arg2;
             int index = quad->number;
-            if (isInList(gotoList, index) || quad->need_label){
+            if (isInList(&listHead, index) || quad->need_label){
                 fprintf(file, "\tlabel%d:\n", index);
             }
 
     		switch(quad->operator){
-    			case E_RETURN:
-    				break;
     			case E_ASSIGN:
                     fprintf(file, "\t\t# %s = %s\n", result->identifier, arg1->identifier);
                     if (arg1 != NULL && arg2 == NULL) {
@@ -117,7 +111,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                 case E_EQUAL:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
-                        addLabel(gotoList, gotoLabel->value);
+                        addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s == %s\n", result->value, arg1->identifier, arg2->identifier);
                     fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
@@ -128,7 +122,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                 case E_DIFFERENT:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
-                        addLabel(gotoList, gotoLabel->value);
+                        addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s != %s\n", result->value, arg1->identifier, arg2->identifier);
                     fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
@@ -139,7 +133,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                 case E_INFEQUAL:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
-                        addLabel(gotoList, gotoLabel->value);
+                        addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s <= %s\n", result->value, arg1->identifier, arg2->identifier);
                     fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
@@ -150,7 +144,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                 case E_SUPEQUAL:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
-                        addLabel(gotoList, gotoLabel->value);
+                        addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s >= %s\n", result->value, arg1->identifier, arg2->identifier);
                     fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
@@ -161,7 +155,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                 case E_SUPERIOR:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
-                        addLabel(gotoList, gotoLabel->value);
+                        addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s > %s\n", result->value, arg1->identifier, arg2->identifier);
                     fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
@@ -172,7 +166,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                 case E_INFERIOR:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
-                        addLabel(gotoList, gotoLabel->value);
+                        addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s < %s\n", result->value, arg1->identifier, arg2->identifier);
                     fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
@@ -184,7 +178,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     //add goto label in list
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
-                        addLabel(gotoList, gotoLabel->value);
+                        addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d\n", result->value);
                     fprintf(file, "\t\tj label%d\n", result->value);
@@ -219,31 +213,48 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
             symbol_list = symbol_list->next;
         }
 
-        free(gotoList);
+        fclose(file);
+        gotoList_free(listHead);
     }
 }
 
-void addLabel(GotoList* gotoList, int value) {
-    Goto* g = malloc(sizeof(*g));
-    if (g == NULL) {
-        exit(EXIT_FAILURE);
+void addLabel(GotoList** listHead, int value) {
+    if (*listHead == NULL) {
+        GotoList* gotoLabel = malloc(sizeof(*listHead));
+        gotoLabel->index = value;
+        gotoLabel->next = NULL;
+        *listHead = gotoLabel;
     }
-    g->index = value;
-    g->next = gotoList->first;
-    gotoList->first = g;
+    else {
+        GotoList* gotoLabel = *listHead;
+        GotoList* newLabel = malloc(sizeof(*newLabel));
+        newLabel->next = NULL;
+        newLabel->index = value;
+        while (gotoLabel->next != NULL) {
+            gotoLabel = gotoLabel->next;
+        }
+        gotoLabel->next = newLabel;
+    }
 }
 
-bool isInList(GotoList* gotoList, int index) {
-    Goto* g = gotoList->first;
-    Goto* gprev = NULL;
-    while ( g != NULL) {
-        if (g->index == index) {
-            //gprev->next = g->next;
-            //free(g);
+bool isInList(GotoList** listHead, int index) {
+    GotoList* gotoLabel = *listHead;
+    while (gotoLabel != NULL) {
+        if (gotoLabel->index == index) {
             return true;
         }
-        g = g->next;
-        gprev = g;
+        gotoLabel = gotoLabel->next;
     }
     return false;
+}
+
+
+void gotoList_free(GotoList* listHead){
+    GotoList* gotoLabel = listHead;
+    GotoList* prev;
+    while(gotoLabel != NULL){
+        prev = gotoLabel;
+        gotoLabel = gotoLabel->next;
+        free(prev);
+    }
 }

@@ -1,0 +1,17 @@
+int main() {
+    int a;
+    int b = 5;
+    int c = (b + 5) / 2;
+    printi(c);
+    if (true) {
+        if (true) {
+            if (true) {
+                if (true) {
+                    a = 3;
+                }
+            }
+        }
+    }
+    printi(a);
+    return 0;
+}
