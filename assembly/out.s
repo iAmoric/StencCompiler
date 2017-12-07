@@ -23,6 +23,7 @@ main:
 		syscall
 
 .data
+	_N: .word 15
 	__temp_0: .word 3
 	_a: .word 0
 	_b: .word 0

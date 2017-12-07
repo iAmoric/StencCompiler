@@ -6,7 +6,7 @@
   #include "quad_list.h"
   #include "operator.h"
   #include "assembly_generator.h"
-  //#define DEBUG
+  #define DEBUG
 
 
   void debug(char*);
@@ -186,7 +186,7 @@ statement:
   ;
 
 declaration:
-   INT ID {
+   INT ID array {
     struct symbol* result = symbol_lookup(symbol_list, $2);
       if(result == NULL){
         result = symbol_add(&symbol_list, $2);
@@ -200,7 +200,7 @@ declaration:
   ;
 
 affectation:
-    ID OP_ASSIGN expression {
+    ID array OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
@@ -212,8 +212,8 @@ affectation:
       }
       result->is_initialised = true;
       $$.result = result;
-      struct quad* quad = quad_gen(E_ASSIGN,result,$3.result,NULL);
-      struct quad* code = quad_add($3.code,quad);
+      struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
+      struct quad* code = quad_add($4.code,quad);
       $$.code = code;
       debug("ID = expr");
     }
@@ -290,6 +290,14 @@ declaration_affectation:
       $$.code = code;
     }
     ;
+
+array:
+    |
+    array '[' NUM ']' {
+        debug("array");
+    }
+    ;
+
 expression:
     expression OP_PLUS expression {
       struct symbol* result = symbol_newtemp(&symbol_list);
@@ -348,11 +356,11 @@ expression:
       $$.code = $2.code;
     }
     |
-    ID {
+    ID array {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
-      } 
+      }
       if(result->is_define == true){
         if(result->is_initialised == false){
           printf("ERROR: using define with no value -> %s\n",$1);
@@ -397,7 +405,7 @@ control_structure:
       quad_list_complete($3.true_list,where_true);
       $$.code = quad_add($3.code,$6.code);
       if($6.code != NULL){
-        last_statement = quad_last($6.code); 
+        last_statement = quad_last($6.code);
       }else{
         last_statement = quad_last($3.code);
       }
@@ -419,7 +427,7 @@ control_structure:
       code = quad_add(code,$11.code);
       $$.code  = code;
       if($11.code != NULL){
-        last_statement = $11.code; 
+        last_statement = $11.code;
       }else{
         last_statement = $10.code;
       }
@@ -443,7 +451,7 @@ control_structure:
       $$.code  = code;
       //dernière instruction a faire dans la boucle
       if($6.code != NULL){
-        last_statement = quad_last($6.code); 
+        last_statement = quad_last($6.code);
       }else{
         last_statement = $7.code;
       }

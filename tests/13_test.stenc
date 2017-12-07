@@ -1,6 +1,9 @@
+#define N 15
+
 int main() {
     int a = 3;
     int b[5][6];
     b[3][5] = 5;
+    tzb
     b[1][2] = b[3][5] + a;
 }

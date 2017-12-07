@@ -53,7 +53,8 @@ string          \"(\\.|[^"\\])*\"
 "=<"|"<="       { return OP_INF_EQUAL; }
 [()]            { return yytext[0]; }
 [{}]            { return yytext[0]; }
-[[]]            { return yytext[0]; }
+"["             { return yytext[0]; }
+"]"             { return yytext[0]; }
 ","             { return yytext[0]; }
 ";"	            { return yytext[0]; }
 \n              { }
