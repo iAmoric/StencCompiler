@@ -1,0 +1,7 @@
+*.s
+*.o
+stenc
+y.tab.h
+y.tab.c
+lex.yy.c
+
