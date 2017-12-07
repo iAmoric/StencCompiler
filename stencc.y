@@ -27,7 +27,7 @@
     struct quad_list* false_list;
   }codegen;
 }
-%type <codegen> expression affectation statement 
+%type <codegen> expression affectation statement define define_list
 %type <codegen> statement_list declaration programme declaration_affectation
 %type <codegen> mark element condition control_structure
 %token <string> ID STRING
@@ -37,7 +37,7 @@
 %token CONST PRINTI PRINTF
 %token OP_PLUS OP_INC OP_MINUS OP_DEC
 %token OP_STEN OP_EQUAL OP_ASSIGN OP_AND
-%token OP_OR OP_NOT
+%token OP_OR OP_NOT DEFINE_STRING
 %token OP_MULTI OP_DIV OP_SUP OP_INF OP_SUP_EQUAL OP_INF_EQUAL
 
 %left OP_OR
@@ -61,12 +61,47 @@ axiom:
   ;
 
 programme:
-    INT MAIN '(' ')' '{' statement_list '}'{
+    define_list INT MAIN '(' ')' '{' statement_list '}'{
       //détection du main
       debug("programme");
-      $$.code = $6.code;
+      //$$.code = $6.code;
+      $$.code = $7.code;
     }
   ;
+
+define_list:
+  define define_list{
+
+  }
+  |{
+
+  }
+
+define:
+  DEFINE_STRING ID NUM{
+    struct symbol* result = symbol_lookup(symbol_list, $2);
+      if(result == NULL){
+        result = symbol_add(&symbol_list, $2);
+        result->is_define = true;
+        result->is_initialised = true;
+        result->isconstant = true;
+        result->value = $3;
+      }else{
+        printf("ERROR: define already declared  -> %s",$2);
+        exit(1);
+      }
+  }
+  |
+  DEFINE_STRING ID {
+    struct symbol* result = symbol_lookup(symbol_list, $2);
+      if(result == NULL){
+        result = symbol_add(&symbol_list, $2);
+        result->is_define = true;
+      }else{
+        printf("ERROR: define already declared  -> %s",$2);
+        exit(1);
+      }
+  }
 
 statement_list:
   statement statement_list {
@@ -122,6 +157,9 @@ statement:
         printf("ERROR: undeclared variable -> %s\n",$3);
         exit(1);
       }
+      if(result->is_initialised == false){
+        printf("WARNING: using initialised variable -> %s\n",$3);
+      }
       $$.result = result;
       struct quad* quad = quad_gen(E_PRINTI,result,NULL,NULL);
       $$.code = quad;
@@ -159,18 +197,6 @@ declaration:
       $$.result = result;
       $$.code = NULL;
    }
-   |
-   CONST INT ID {
-    struct symbol* result = symbol_lookup(symbol_list, $3);
-      if(result == NULL){
-        result = symbol_add(&symbol_list, $3);
-      }else{
-        printf("ERROR: already declared variable -> %s",$3);
-        exit(1);
-      }
-      $$.result = result;
-      $$.code = NULL;
-   }
   ;
 
 affectation:
@@ -184,6 +210,7 @@ affectation:
         printf("ERROR: try to modify a constant  -> %s\n",$1);
         exit(1);
       }
+      result->is_initialised = true;
       $$.result = result;
       struct quad* quad = quad_gen(E_ASSIGN,result,$3.result,NULL);
       struct quad* code = quad_add($3.code,quad);
@@ -200,6 +227,9 @@ affectation:
         printf("ERROR: try to modify a constant  -> %s\n",$1);
         exit(1);
       }
+      if(result->is_initialised == false){
+        printf("WARNING: using uninitialized variable -> %s\n",$1);
+      }
       $$.result = result;
       struct symbol* temp = symbol_newtemp_init(&symbol_list,1);
       struct quad* quad = quad_gen(E_PLUS,result,result,temp);
@@ -214,6 +244,9 @@ affectation:
       if(result->isconstant){
         printf("ERROR: try to modify a constant  -> %s\n",$1);
         exit(1);
+      }
+      if(result->is_initialised == false){
+        printf("WARNING: using uninitialized variable -> %s\n",$1);
       }
       $$.result = result;
       struct symbol* temp = symbol_newtemp_init(&symbol_list,1);
@@ -233,6 +266,7 @@ declaration_affectation:
         printf("ERROR: already declared variable -> %s\n",$2);
         exit(1);
       }
+      result->is_initialised = true;
       $$.result = result;
       struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
       struct quad* code = quad_add($4.code,quad);
@@ -249,6 +283,7 @@ declaration_affectation:
         printf("ERROR: already declared variable -> %s\n",$3);
         exit(1);
       }
+      result->is_initialised = true;
       $$.result = result;
       struct quad* quad = quad_gen(E_ASSIGN,result,$5.result,NULL);
       struct quad* code = quad_add($5.code,quad);
@@ -318,6 +353,16 @@ expression:
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
       } 
+      if(result->is_define == true){
+        if(result->is_initialised == false){
+          printf("ERROR: using define with no value -> %s\n",$1);
+          exit(1);
+        }
+      }
+      else if(result->is_initialised == false){
+        printf("WARNING: using uninitialized variable -> %s\n",$1);
+      }
+
       $$.result = result;
       $$.code = NULL;
       debug("ID");
@@ -434,6 +479,15 @@ element:
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
       }
+      if(result->is_define == true){
+        if(result->is_initialised == false){
+          printf("ERROR: using define with no value -> %s\n",$1);
+          exit(1);
+        }
+      }
+      else if(result->is_initialised == false){
+        printf("WARNING: using uninitialized variable -> %s\n",$1);
+      }
       $$.result = result;
       $$.code = NULL;
       debug("ID");
@@ -447,8 +501,8 @@ element:
 condition:
     element OP_EQUAL element {
       debug("elt == elt");
-      struct quad* codeTrue = quad_gen(E_EQUAL,NULL,$1.result,$3.result);
-      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
+      struct quad* codeTrue = quad_gen(E_EQUAL,NULL,$1.result,$3.result); //if ( a == b) goto ?
+      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL); // goto ?
       struct quad* code = quad_add(codeTrue,codeFalse);
       $$.code = code;
       $$.true_list = quad_list_new(codeTrue);

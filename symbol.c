@@ -6,6 +6,7 @@ struct symbol* symbol_alloc(){
     new_symbol = malloc(sizeof(struct symbol));
     new_symbol->identifier = NULL;
     new_symbol->isconstant = false;
+    new_symbol->is_initialised = false;
     new_symbol->value = 0; // seulement si c'est une constante
     new_symbol->string = NULL;
     new_symbol->next = NULL;
@@ -17,6 +18,7 @@ struct symbol* symbol_add(struct symbol** table, char* name)
     if(*table == NULL){
         *table = symbol_alloc();
         (*table)->identifier = strdup(name);
+        //(*table)->identifier = name;
         return *table;
     } else{
         struct symbol* scan = *table;
@@ -24,6 +26,7 @@ struct symbol* symbol_add(struct symbol** table, char* name)
             scan = scan->next;
         scan->next = symbol_alloc();
         scan->next->identifier = strdup(name);
+        //scan->next->identifier = na;
         return scan->next;
     }
 }
@@ -39,6 +42,7 @@ struct symbol* symbol_newtemp(struct symbol** table){
 struct symbol*  symbol_newtemp_init(struct symbol** table,int num){
   struct symbol* temp = symbol_newtemp(table);
   temp->isconstant = true;
+  temp->is_initialised = true;
   temp->value = num;
   return temp;
 }

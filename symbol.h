@@ -9,6 +9,8 @@
 struct symbol {
   char* identifier;
   bool isconstant;
+  bool is_initialised;
+  bool is_define;
   int value; // seulement si c'est une constante
   char* string; //pour le print
   struct symbol* next;
