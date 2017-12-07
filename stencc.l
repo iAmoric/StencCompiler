@@ -28,7 +28,10 @@ string          \"(\\.|[^"\\])*\"
 "const"         { return CONST; }
 "printi"        { return PRINTI; }
 "printf"        { return PRINTF; }
-{identifier}    { yylval.string = strdup(yytext);return ID; }
+"#define"		{ return DEFINE_STRING;}
+{identifier}    { yylval.string = strdup(yytext);
+				//yylval.string = yytext;
+				return ID; }
 {number}        { yylval.value = atoi(yytext);return NUM; }
 {comment}       { }
 {string}        { yylval.string = strdup(yytext); return STRING;}
