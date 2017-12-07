@@ -13,7 +13,13 @@ struct symbol {
   bool is_define;
   int value; // seulement si c'est une constante
   char* string; //pour le print
+  struct array_dimension* array_dimension;//pour les tableaux
   struct symbol* next;
+};
+
+struct array_dimension {
+    int nb_element;
+    struct array_dimension* next_dimension;
 };
 
 struct symbol* 	symbol_alloc();

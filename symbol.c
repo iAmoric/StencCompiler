@@ -18,6 +18,7 @@ struct symbol* symbol_add(struct symbol** table, char* name)
     if(*table == NULL){
         *table = symbol_alloc();
         (*table)->identifier = strdup(name);
+        (*table)->is_initialised = false;
         //(*table)->identifier = name;
         return *table;
     } else{
@@ -26,6 +27,7 @@ struct symbol* symbol_add(struct symbol** table, char* name)
             scan = scan->next;
         scan->next = symbol_alloc();
         scan->next->identifier = strdup(name);
+        scan->next->is_initialised = false;
         //scan->next->identifier = na;
         return scan->next;
     }

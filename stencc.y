@@ -25,11 +25,13 @@
     struct quad* code;
     struct quad_list* true_list;
     struct quad_list* false_list;
+    struct array_dimension* dimension;
   }codegen;
 }
 %type <codegen> expression affectation statement define define_list
 %type <codegen> statement_list declaration programme declaration_affectation
 %type <codegen> mark element condition control_structure
+%type <codegen> array
 %token <string> ID STRING
 %token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
@@ -186,7 +188,7 @@ statement:
   ;
 
 declaration:
-   INT ID array {
+   INT ID {
     struct symbol* result = symbol_lookup(symbol_list, $2);
       if(result == NULL){
         result = symbol_add(&symbol_list, $2);
@@ -197,9 +199,60 @@ declaration:
       $$.result = result;
       $$.code = NULL;
    }
+   |
+   INT ID array {
+      int index;
+      struct symbol* result = symbol_lookup(symbol_list, $2);
+      if(result == NULL){
+        result = symbol_add(&symbol_list, $2);
+      }else{
+        printf("ERROR: already declared variable -> %s\n",$2);
+        exit(1);
+      }
+      result->array_dimension = $3.dimension;
+      struct array_dimension* parcours = $3.dimension;
+      int nb_element_array = parcours->nb_element;
+      if(nb_element_array <= 0){
+        printf("ERROR: size of array = 0 or < 0 -> %s\n",$2);
+        exit(1);
+      }
+      parcours = parcours->next_dimension;
+      while(parcours != NULL){
+        if(parcours->nb_element > 0){
+          nb_element_array *= parcours->nb_element;
+        }else {
+          printf("ERROR: size of array = 0 or < 0 -> %s\n",$2);
+          exit(1);
+        }
+        parcours = parcours->next_dimension;
+      }
+      for(index = 0; index < nb_element_array; index++){
+          symbol_newtemp(&symbol_list);
+      }
+      $$.result = result;
+      $$.code = NULL;
+   }
   ;
 
 affectation:
+    ID OP_ASSIGN expression {
+      struct symbol* result = symbol_lookup(symbol_list, $1);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
+      }
+      if(result->isconstant){
+        printf("ERROR: try to modify a constant  -> %s\n",$1);
+        exit(1);
+      }
+      result->is_initialised = true;
+      $$.result = result;
+      struct quad* quad = quad_gen(E_ASSIGN,result,$3.result,NULL);
+      struct quad* code = quad_add($3.code,quad);
+      $$.code = code;
+      debug("ID = expr");
+    }
+    |
     ID array OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
@@ -292,9 +345,18 @@ declaration_affectation:
     ;
 
 array:
-    |
-    array '[' NUM ']' {
+    '[' NUM ']' array{
         debug("array");
+        struct array_dimension* dimension = malloc(sizeof(struct array_dimension));
+        dimension->nb_element = $2;
+        dimension->next_dimension = $4.dimension;
+        $$.dimension = dimension;
+    }
+    | '[' NUM ']' {
+       struct array_dimension* dimension = malloc(sizeof(struct array_dimension));
+       dimension->nb_element = $2;
+       dimension->next_dimension = NULL;
+       $$.dimension = dimension;
     }
     ;
 
