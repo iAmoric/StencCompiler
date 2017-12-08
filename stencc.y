@@ -31,8 +31,7 @@
 }
 %type <codegen> expression affectation statement define define_list
 %type <codegen> statement_list declaration programme declaration_affectation
-%type <codegen> mark condition control_structure
-%type <codegen> array
+%type <codegen> mark condition control_structure array_declare
 %token <string> ID STRING
 %token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
@@ -201,7 +200,7 @@ declaration:
       $$.code = NULL;
    }
    |
-   INT ID array {
+   INT ID array_declare {
       int index;
       struct symbol* result = symbol_lookup(symbol_list, $2);
       if(result == NULL){
@@ -210,31 +209,29 @@ declaration:
         printf("ERROR: already declared variable -> %s\n",$2);
         exit(1);
       }
-      result->isconstant = true;
+      result->is_array = true;
       result->array_dimension = $3.dimension;
-      struct array_dimension* parcours = $3.dimension;
-      int nb_element_array = parcours->nb_element;
-      if(nb_element_array <= 0){
-        printf("ERROR: size of array = 0 or < 0 -> %s\n",$2);
-        exit(1);
-      }
-      parcours = parcours->next_dimension;
-      while(parcours != NULL){
-        if(parcours->nb_element > 0){
-          nb_element_array *= parcours->nb_element;
-        }else {
-          printf("ERROR: size of array = 0 or < 0 -> %s\n",$2);
-          exit(1);
-        }
-        parcours = parcours->next_dimension;
-      }
-      for(index = 0; index < nb_element_array; index++){
-          symbol_newtemp(&symbol_list);
-      }
+      //array_dimension_total(result->array_dimension,&symbol_list);
+      //printf("COUCOU: %d",$3.dimension->total);
       $$.result = result;
       $$.code = NULL;
    }
   ;
+
+array_declare:
+  array_declare '[' NUM ']' {
+    /*struct quad* code = quad_add(array_declare.code,expression.code);
+    struct symbol* result = symbol_newtemp(&symbol_list);
+    struct quad* mul = quad_gen(E_MULT,result,$1.result,$3.result);
+    code = quad_add(code,mul);
+    $$.code = code;
+    $$.result = result;*/
+  }
+  | '[' NUM ']' {
+    /*$$.code = $2.code;
+    $$.result = $2.result;*/
+
+  }
 
 affectation:
     ID OP_ASSIGN expression {
@@ -254,7 +251,7 @@ affectation:
       $$.code = code;
       debug("ID = expr");
     }
-    |
+    /*|
     ID array OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
@@ -265,14 +262,14 @@ affectation:
         printf("ERROR: %s is not a array\n",$1);
         exit(1);
       }
-      result = symbol_get(result,array_dimension_translate($2.dimension,result->array_dimension));
+      result = symbol_create_copy(&symbol_list,result);
+      result->array_dimension = $2.dimension;
       $$.result = result;
-      $$.result->is_initialised = true;
       struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
       struct quad* code = quad_add($4.code,quad);
       $$.code = code;
       debug("ID = expr");
-    }
+    }*/
     | ID OP_INC {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
@@ -346,25 +343,6 @@ declaration_affectation:
       $$.code = code;
     }
     ;
-
-array:
-    '[' NUM ']' array{
-        debug("array");
-        struct array_dimension* dimension = malloc(sizeof(struct array_dimension));
-        dimension->nb_element = $2;
-        dimension->total = $4.dimension->total * $2;
-        dimension->next_dimension = $4.dimension;
-        $$.dimension = dimension;
-    }
-    | '[' NUM ']' {
-       struct array_dimension* dimension = malloc(sizeof(struct array_dimension));
-       dimension->nb_element = $2;
-       dimension->total = $2;
-       dimension->next_dimension = NULL;
-       $$.dimension = dimension;
-    }
-    ;
-
 expression:
     expression OP_PLUS expression {
       struct symbol* result = symbol_newtemp(&symbol_list);
@@ -442,22 +420,24 @@ expression:
       $$.code = NULL;
       debug("ID");
     }
-    |
+    /*|
     ID array{
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
       }
       if(result->is_array = false){
         printf("ERROR: %s is not a array\n",$1);
         exit(1);
       }
-      result = symbol_get(result,array_dimension_translate($2.dimension,result->array_dimension));
+      result = symbol_create_copy(&symbol_list,result);
+      result->array_dimension = $2.dimension;
       $$.result = result;
-      $$.result->is_initialised = true;
+      //$$.result->is_initialised = true;
       $$.code = NULL;
       debug("ID");
-    }
+    }*/
     |
     NUM {
       struct symbol* result = symbol_newtemp(&symbol_list);
@@ -695,7 +675,7 @@ int main(int argc, char* argv[]) {
     quad_print(quad_list);
 
     //generation code assembleur
-    generator(symbol_list, quad_list);
+    //generator(symbol_list, quad_list);
 
     // Be clean.
     lex_free();
