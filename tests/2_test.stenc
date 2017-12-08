@@ -1,6 +1,6 @@
 int main() {
     int a;
-    const int b = VALUE;
+    const int b = 5;
     printi(a);
     return 0;
 }

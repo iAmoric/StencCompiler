@@ -11,6 +11,7 @@ comment         \/\/.*
 string          \"(\\.|[^"\\])*\"
 
 /* comments like  '// blabla' */
+%option case-insensitive
 
 %%
 

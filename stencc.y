@@ -418,7 +418,7 @@ expression:
       $$.code = $2.code;
     }
     |
-    ID array {
+    ID {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
