@@ -7,7 +7,7 @@
   #include "operator.h"
   #include "array_dimension.h"
   #include "assembly_generator.h"
-  #define DEBUG
+  //#define DEBUG
 
 
   void debug(char*);
@@ -31,7 +31,7 @@
 }
 %type <codegen> expression affectation statement define define_list
 %type <codegen> statement_list declaration programme declaration_affectation
-%type <codegen> mark condition control_structure array_declare
+%type <codegen> mark condition control_structure array_declare array mark_array array_next
 %token <string> ID STRING
 %token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
@@ -190,6 +190,7 @@ statement:
 declaration:
    INT ID {
     struct symbol* result = symbol_lookup(symbol_list, $2);
+      debug("INT ID");
       if(result == NULL){
         result = symbol_add(&symbol_list, $2);
       }else{
@@ -201,7 +202,9 @@ declaration:
    }
    |
    INT ID array_declare {
-      int index;
+      debug("INT ID [...]");
+      int array_size = 0;
+      struct array_dimension* parcours;
       struct symbol* result = symbol_lookup(symbol_list, $2);
       if(result == NULL){
         result = symbol_add(&symbol_list, $2);
@@ -211,27 +214,96 @@ declaration:
       }
       result->is_array = true;
       result->array_dimension = $3.dimension;
-      //array_dimension_total(result->array_dimension,&symbol_list);
-      //printf("COUCOU: %d",$3.dimension->total);
-      $$.result = result;
+      parcours = $3.dimension;
+      array_size = parcours->size->value;
+      parcours = parcours ->next_dimension;
+      while(parcours != NULL){
+        array_size = array_size * parcours->size->value;
+        parcours = parcours->next_dimension;
+      }
+      array_size*=4;
+      result->value = array_size;
+      $$.result = NULL;
       $$.code = NULL;
    }
   ;
 
 array_declare:
-  array_declare '[' NUM ']' {
-    /*struct quad* code = quad_add(array_declare.code,expression.code);
-    struct symbol* result = symbol_newtemp(&symbol_list);
-    struct quad* mul = quad_gen(E_MULT,result,$1.result,$3.result);
-    code = quad_add(code,mul);
-    $$.code = code;
-    $$.result = result;*/
+   '[' NUM ']' array_declare {
+     debug("array_declare [NUM]");
+    $$.dimension = malloc(sizeof(struct array_dimension));
+    struct symbol* size = symbol_newtemp_init(&symbol_list,$2);
+    $$.dimension->size = size;
+    $$.dimension->next_dimension = $4.dimension;
   }
   | '[' NUM ']' {
-    /*$$.code = $2.code;
-    $$.result = $2.result;*/
-
+    debug("[NUM]");
+    $$.dimension = malloc(sizeof(struct array_dimension));
+    struct symbol* size = symbol_newtemp_init(&symbol_list,$2);
+    $$.dimension->size = size;
   }
+
+array:
+    expression ']' '[' array_next {
+    debug( "expr ] [ array_next");
+    $$.code = quad_add($1.code,$4.code);
+    $$.true_list = $4.true_list;
+    $4.true_list->elt->arg1 = $1.result;
+    $$.result = $4.result;
+  }
+  |
+  expression ']'{
+    debug("expr ] ");
+    $$.result = $1.result;
+    $$.code = $1.code;
+  }
+  ;
+array_next:
+    array_next '[' expression ']'{
+    debug("[ expr ] [ array_next");
+    struct symbol* result_mult = symbol_newtemp(&symbol_list);
+    struct symbol* result_plus = symbol_newtemp(&symbol_list);
+    struct quad* code = quad_add($1.code,$3.code);
+    struct quad* multi = quad_gen(E_MULT,result_mult,$1.result,NULL);
+    struct quad* plus = quad_gen(E_PLUS,result_plus,$3.result,result_mult);
+    struct quad_list* array_list = quad_list_new(multi);
+    array_list = quad_list_concat($1.true_list,array_list);
+    code = quad_add(code,multi);
+    code = quad_add(code,plus);
+    $$.true_list = array_list;
+    $$.code = code;
+    $$.result = result_plus;
+  }
+  |
+   expression ']' {
+    debug("expr ] ");
+    struct symbol* result_mult = symbol_newtemp(&symbol_list);
+    struct symbol* result_plus = symbol_newtemp(&symbol_list);
+    struct quad* code = $1.code;
+    struct quad* multi = quad_gen(E_MULT,result_mult,NULL,NULL);
+    struct quad* plus = quad_gen(E_PLUS,result_plus,$1.result,result_mult);
+    struct quad_list* array_list = quad_list_new(multi);
+    code = quad_add(code,multi);
+    code = quad_add(code,plus);
+    $$.true_list = array_list;
+    $$.code = code;
+    $$.result = result_plus;
+  }
+  ;
+
+mark_array:
+  {
+    struct symbol* result_mult = symbol_newtemp(&symbol_list); //offset total
+    struct symbol* result_addr = symbol_newtemp(&symbol_list);  // addr
+    struct symbol* result_tab = symbol_newtemp(&symbol_list); //valeur à addr
+    struct quad* mult_size = quad_gen(E_MULT,result_mult,symbol_newtemp_init(&symbol_list,4),NULL);
+    struct quad* addr = quad_gen(E_PLUS,result_addr,result_mult,NULL);
+    struct quad* tab = quad_gen(E_TAB,result_tab,result_addr,NULL);
+    $$.result = result_tab;
+    $$.code = quad_add(mult_size,addr);
+    $$.code = quad_add($$.code,tab);
+  }
+  ;
 
 affectation:
     ID OP_ASSIGN expression {
@@ -251,25 +323,27 @@ affectation:
       $$.code = code;
       debug("ID = expr");
     }
-    /*|
-    ID array OP_ASSIGN expression {
+    | 
+    ID '['array mark_array OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
-      if(result->is_array = false){
+      if(result->is_array == false){
         printf("ERROR: %s is not a array\n",$1);
         exit(1);
       }
-      result = symbol_create_copy(&symbol_list,result);
-      result->array_dimension = $2.dimension;
-      $$.result = result;
-      struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
-      struct quad* code = quad_add($4.code,quad);
+      $4.code->arg2 = $3.result;
+      $4.code->next->arg2 = result;
+      struct quad* quad = quad_gen(E_ASSIGN,$4.result,$6.result,NULL);
+      struct quad* code = quad_add($3.code,$4.code);
+      quad_list_array_complete($3.true_list,result->array_dimension);
+      code = quad_add(code,$6.code);
+      code = quad_add(code,quad);
       $$.code = code;
-      debug("ID = expr");
-    }*/
+      debug("ID [...] = expr");
+    }
     | ID OP_INC {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
@@ -306,7 +380,6 @@ affectation:
       struct quad* quad = quad_gen(E_MINUS,result,result,temp);
       $$.code = quad;
     }
-
     ;
 
 declaration_affectation:

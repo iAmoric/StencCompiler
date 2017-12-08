@@ -43,12 +43,6 @@ struct symbol* symbol_newtemp(struct symbol** table){
     return symbol_add(table, temporary_name);
 }
 
-struct symbol* symbol_create_copy(struct symbol** table,struct symbol* to_copy){
-    struct symbol* new_symbol = symbol_newtemp(table);
-    new_symbol->is_copy = true;
-    new_symbol->string = to_copy->identifier;
-    return new_symbol;
-}
 
 struct symbol*  symbol_newtemp_init(struct symbol** table,int num){
   struct symbol* temp = symbol_newtemp(table);
@@ -79,10 +73,11 @@ void symbol_print(struct symbol* symbol)
             else
                 printf("true,  value: %s", symbol->string);
         }
-        else
+        else{
             printf("false, value: N/A");
-        if (symbol->is_copy == true){
-            printf(" est une copie de %s",symbol->string);
+        }
+        if(symbol->is_array == true){
+            printf(" est un tableau de %d ocetes",symbol->value);
         }
         printf("\n");
         symbol = symbol->next;
@@ -101,12 +96,4 @@ void symbol_free(struct symbol* list){
         }
         free(before);
     }
-}
-
-struct symbol*  symbol_get(struct symbol* symbol,int delta){
-    int index;
-    for(index = 0; index < delta; index++){
-        symbol = symbol->next;
-    }
-    return symbol;
 }

@@ -102,6 +102,9 @@ void quad_print(struct quad* list){
 			case E_SUPEQUAL:
 				operator_string = ">=";
 				break;
+			case E_TAB:
+				operator_string =" []";
+				break;
 			default:
 				operator_string = "NOT_DEFINED";
 				break;
