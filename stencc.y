@@ -493,24 +493,24 @@ expression:
       $$.code = NULL;
       debug("ID");
     }
-    /*|
-    ID array{
+    |
+    ID '['array mark_array{
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
-      if(result->is_array = false){
+      if(result->is_array == false){
         printf("ERROR: %s is not a array\n",$1);
         exit(1);
       }
-      result = symbol_create_copy(&symbol_list,result);
-      result->array_dimension = $2.dimension;
-      $$.result = result;
-      //$$.result->is_initialised = true;
-      $$.code = NULL;
-      debug("ID");
-    }*/
+      $4.code->arg2 = $3.result;
+      $4.code->next->arg2 = result;
+      struct quad* code = quad_add($3.code,$4.code);
+      quad_list_array_complete($3.true_list,result->array_dimension);
+      $$.code = code;
+      debug("ID [...]");
+    }
     |
     NUM {
       struct symbol* result = symbol_newtemp(&symbol_list);
