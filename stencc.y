@@ -5,6 +5,7 @@
   #include "quad.h"
   #include "quad_list.h"
   #include "operator.h"
+  #include "array_dimension.h"
   #include "assembly_generator.h"
   #define DEBUG
 
@@ -16,7 +17,6 @@
   struct symbol* symbol_list = NULL;
   struct quad* quad_list = NULL;
   FILE* yyin;
-  int err = 0;
 %}
 %union {
   char* string;
@@ -31,7 +31,7 @@
 }
 %type <codegen> expression affectation statement define define_list
 %type <codegen> statement_list declaration programme declaration_affectation
-%type <codegen> mark element condition control_structure
+%type <codegen> mark condition control_structure
 %type <codegen> array
 %token <string> ID STRING
 %token <value> NUM
@@ -210,6 +210,7 @@ declaration:
         printf("ERROR: already declared variable -> %s\n",$2);
         exit(1);
       }
+      result->isconstant = true;
       result->array_dimension = $3.dimension;
       struct array_dimension* parcours = $3.dimension;
       int nb_element_array = parcours->nb_element;
@@ -260,12 +261,13 @@ affectation:
         printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
-      if(result->isconstant){
-        printf("ERROR: try to modify a constant  -> %s\n",$1);
+      if(result->is_array = false){
+        printf("ERROR: %s is not a array\n",$1);
         exit(1);
       }
-      result->is_initialised = true;
+      result = symbol_get(result,array_dimension_translate($2.dimension,result->array_dimension));
       $$.result = result;
+      $$.result->is_initialised = true;
       struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
       struct quad* code = quad_add($4.code,quad);
       $$.code = code;
@@ -350,12 +352,14 @@ array:
         debug("array");
         struct array_dimension* dimension = malloc(sizeof(struct array_dimension));
         dimension->nb_element = $2;
+        dimension->total = $4.dimension->total * $2;
         dimension->next_dimension = $4.dimension;
         $$.dimension = dimension;
     }
     | '[' NUM ']' {
        struct array_dimension* dimension = malloc(sizeof(struct array_dimension));
        dimension->nb_element = $2;
+       dimension->total = $2;
        dimension->next_dimension = NULL;
        $$.dimension = dimension;
     }
@@ -435,6 +439,22 @@ expression:
       }
 
       $$.result = result;
+      $$.code = NULL;
+      debug("ID");
+    }
+    |
+    ID array{
+      struct symbol* result = symbol_lookup(symbol_list, $1);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$1);
+      }
+      if(result->is_array = false){
+        printf("ERROR: %s is not a array\n",$1);
+        exit(1);
+      }
+      result = symbol_get(result,array_dimension_translate($2.dimension,result->array_dimension));
+      $$.result = result;
+      $$.result->is_initialised = true;
       $$.code = NULL;
       debug("ID");
     }
@@ -543,34 +563,8 @@ control_structure:
     }
     ;
 
-
-element:
-  ID {
-      struct symbol* result = symbol_lookup(symbol_list, $1);
-      if(result == NULL){
-        printf("ERROR: undeclared variable -> %s\n",$1);
-      }
-      if(result->is_define == true){
-        if(result->is_initialised == false){
-          printf("ERROR: using define with no value -> %s\n",$1);
-          exit(1);
-        }
-      }
-      else if(result->is_initialised == false){
-        printf("WARNING: using uninitialized variable -> %s\n",$1);
-      }
-      $$.result = result;
-      $$.code = NULL;
-      debug("ID");
-  }
-  |
-  NUM {
-     $$.result = symbol_newtemp_init(&symbol_list,$1);
-     debug("NUM");
-  }
-
 condition:
-    element OP_EQUAL element {
+    expression OP_EQUAL expression {
       debug("elt == elt");
       struct quad* codeTrue = quad_gen(E_EQUAL,NULL,$1.result,$3.result); //if ( a == b) goto ?
       struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL); // goto ?
@@ -580,7 +574,7 @@ condition:
       $$.false_list = quad_list_new(codeFalse);
     }
     |
-    element OP_SUP element {
+    expression OP_SUP expression {
       debug("elt > elt");
       struct quad* codeTrue = quad_gen(E_SUPERIOR,NULL,$1.result,$3.result);
       struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
@@ -590,7 +584,7 @@ condition:
       $$.false_list = quad_list_new(codeFalse);
     }
     |
-    element OP_INF element {
+    expression OP_INF expression {
       debug("elt < elt");
       struct quad* codeTrue = quad_gen(E_INFERIOR,NULL,$1.result,$3.result);
       struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
@@ -600,7 +594,7 @@ condition:
       $$.false_list = quad_list_new(codeFalse);
     }
     |
-    element OP_SUP_EQUAL element {
+    expression OP_SUP_EQUAL expression {
       debug("elt >= elt");
       struct quad* codeTrue = quad_gen(E_SUPEQUAL,NULL,$1.result,$3.result);
       struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
@@ -610,7 +604,7 @@ condition:
       $$.false_list = quad_list_new(codeFalse);
     }
     |
-    element OP_INF_EQUAL element {
+    expression OP_INF_EQUAL expression {
       debug("elt <= elt");
       struct quad* codeTrue = quad_gen(E_INFEQUAL,NULL,$1.result,$3.result);
       struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
@@ -673,7 +667,6 @@ condition:
 
 void yyerror (char *s) {
     fprintf(stderr, "[Yacc] error: %s\n", s);
-    err++;
 }
 
 void debug (char* s){
@@ -696,11 +689,6 @@ int main(int argc, char* argv[]) {
     }
 
     yyparse();
-
-    if (err != 0) {
-        exit(1);
-    }
-
     printf("-----------------\nSymbol table:\n");
     symbol_print(symbol_list);
     printf("-----------------\nQuad list:\n");
