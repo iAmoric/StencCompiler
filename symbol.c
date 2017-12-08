@@ -8,6 +8,7 @@ struct symbol* symbol_alloc(){
     new_symbol->isconstant = false;
     new_symbol->is_initialised = false;
     new_symbol->is_array = false;
+    new_symbol->is_copy = false;
     new_symbol->value = 0; // seulement si c'est une constante
     new_symbol->string = NULL;
     new_symbol->next = NULL;
@@ -42,6 +43,13 @@ struct symbol* symbol_newtemp(struct symbol** table){
     return symbol_add(table, temporary_name);
 }
 
+struct symbol* symbol_create_copy(struct symbol** table,struct symbol* to_copy){
+    struct symbol* new_symbol = symbol_newtemp(table);
+    new_symbol->is_copy = true;
+    new_symbol->string = to_copy->identifier;
+    return new_symbol;
+}
+
 struct symbol*  symbol_newtemp_init(struct symbol** table,int num){
   struct symbol* temp = symbol_newtemp(table);
   temp->isconstant = true;
@@ -67,12 +75,16 @@ void symbol_print(struct symbol* symbol)
         printf("identifier: %7s, is constant:", symbol->identifier);
         if(symbol->isconstant) {
             if (symbol->string == NULL)
-                printf("true,  value: %d\n", symbol->value);
+                printf("true,  value: %d", symbol->value);
             else
-                printf("true,  value: %s\n", symbol->string);
+                printf("true,  value: %s", symbol->string);
         }
         else
-            printf("false, value: N/A\n");
+            printf("false, value: N/A");
+        if (symbol->is_copy == true){
+            printf(" est une copie de %s",symbol->string);
+        }
+        printf("\n");
         symbol = symbol->next;
     }
 }
