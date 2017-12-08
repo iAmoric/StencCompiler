@@ -7,6 +7,7 @@ struct symbol* symbol_alloc(){
     new_symbol->identifier = NULL;
     new_symbol->isconstant = false;
     new_symbol->is_initialised = false;
+    new_symbol->is_array = false;
     new_symbol->value = 0; // seulement si c'est une constante
     new_symbol->string = NULL;
     new_symbol->next = NULL;
@@ -88,4 +89,12 @@ void symbol_free(struct symbol* list){
         }
         free(before);
     }
+}
+
+struct symbol*  symbol_get(struct symbol* symbol,int delta){
+    int index;
+    for(index = 0; index < delta; index++){
+        symbol = symbol->next;
+    }
+    return symbol;
 }
