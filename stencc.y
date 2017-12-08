@@ -16,6 +16,7 @@
   struct symbol* symbol_list = NULL;
   struct quad* quad_list = NULL;
   FILE* yyin;
+  int err = 0;
 %}
 %union {
   char* string;
@@ -672,6 +673,7 @@ condition:
 
 void yyerror (char *s) {
     fprintf(stderr, "[Yacc] error: %s\n", s);
+    err++;
 }
 
 void debug (char* s){
@@ -694,6 +696,11 @@ int main(int argc, char* argv[]) {
     }
 
     yyparse();
+
+    if (err != 0) {
+        exit(1);
+    }
+
     printf("-----------------\nSymbol table:\n");
     symbol_print(symbol_list);
     printf("-----------------\nQuad list:\n");
