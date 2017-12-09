@@ -1,0 +1,20 @@
+//test boucles imbriquées
+//TODO check
+
+#define N 5
+
+int main(){
+	int i;
+	int j;
+	for (i = 0; i < N; i++){
+		for (j = 0; j < N; j++){
+			printi(j);
+			printf("\n");
+		}
+	}
+}
+
+//FAILED
+//Undefined label 14
+//Instruction references undefined symbol at 0x0040004c
+//[0x0040004c]	0x08000000  j 0x00000000 [label14]          ; 14: j label14

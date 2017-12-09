@@ -1,8 +1,10 @@
+//test if imbriqués
 int main() {
     int a;
     int b = 5;
     int c = (b + 5) / 2;
     printi(c);
+    printf("\n");
     if (true) {
         if (true) {
             if (true) {
@@ -15,3 +17,5 @@ int main() {
     printi(a);
     return 0;
 }
+
+//OK

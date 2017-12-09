@@ -2,9 +2,10 @@
 int main(){
 	int i = 8;
 	while ( i > 0){
-		i = i - 1;
+		i--;
 		printi(i);
 		printf("\n");
 	}
 	return 0;
 }
+//OK

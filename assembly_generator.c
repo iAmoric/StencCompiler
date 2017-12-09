@@ -200,11 +200,27 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     fprintf(file, "\t\tj label%d\n", result->value);
                     fprintf(file, "\n");
                     break;
-                case E_TAB:
-                    fprintf(file, "\t\t# valeur à l'adresse %s\n", arg1->identifier);
+                case E_TAB_LOAD:
+                    //arg1 est l'adresse, result est la valeur contenu à l'adresse arg1
+                    fprintf(file, "\t\t#lire %s et stocker dans %s\n", arg1->identifier, result->identifier);
                     if (arg1 != NULL && arg2 == NULL) {
                         fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tlw $t0, ($t0)\n");
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
+                        fprintf(file, "\n");
+                    }
+                    else {
+                        fprintf(stderr, "Error quad\n");
+                        exit(1);
+                    }
+                    break;
+                case E_TAB_WRITE:
+                    //arg1 est l'adresse, result est la valeur a écrire dans la case à l'adresse arg1
+                    fprintf(file, "\t\t# ecrire %s à l'adresse %s\n",  result->identifier, arg1->identifier);
+                    if (arg1 != NULL && arg2 == NULL) {
+                        fprintf(file, "\t\tlw $t0, _%s\n", result->identifier);
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tsw $t0, ($t1)\n");
                         fprintf(file, "\n");
                     }
                     else {

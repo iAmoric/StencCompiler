@@ -1,11 +1,16 @@
+//test uninitialized variables
+
 int main() {
     int a;
     int b;
     int c;
     if (a == 5 || b => 6 && c < 7) {
         a = 3;
-    } else {
-	b = 7;
-    }	
+    }
+    else {
+	   b = 7;
+    }
     return 0;
 }
+
+//OK

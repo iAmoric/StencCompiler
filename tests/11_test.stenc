@@ -6,7 +6,7 @@ int main() {
     printf("a = ");
     printi(a);
     printf("\n");
-	for (i = 1; i < 6; i++) {
+	for (i = 1; i < 5; i++) {
 		if (i > 3) {
             b = b + i;
             printf("b = ");
@@ -29,3 +29,5 @@ int main() {
     printf("\n");
 	return 0;
 }
+
+//OK

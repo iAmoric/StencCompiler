@@ -1,14 +1,17 @@
-#define N 15
+//test tableau
 
 int main() {
     int a = 3;
     int c = 2+2;
     printf("hello\n");
     printi(2);
-    int b[2][2][3];
-    b[1][1][1] = 5;
-    b[1][1][0] = b[1][1][1] + a;
-   	c = b[1][1][0];
+    printf("\n");
+    int tab[2][2][3];
+    tab[1][1][1] = 5;
+    tab[1][1][0] = tab[1][1][1] + a;
+   	c = tab[1][1][0];
     printi(c);
     return 0;
 }
+
+//OK
