@@ -68,6 +68,11 @@ programme:
       debug("programme");
       //$$.code = $6.code;
       $$.code = $7.code;
+      struct quad* last_quad = quad_last($7.code);
+      if(last_quad->operator != E_RETURN){
+        printf("ERROR: main function have to end with a return statement\n");
+        exit(1);
+      }
     }
   ;
 
