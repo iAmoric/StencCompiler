@@ -109,7 +109,7 @@ void quad_print(struct quad* list){
 				operator_string = "[write]";
 				break;
 			case E_DIFFERENT:
-				operator_string ="!=";
+				operator_string = "!=";
 				break;
 			default:
 				operator_string = "NOT_DEFINED";
