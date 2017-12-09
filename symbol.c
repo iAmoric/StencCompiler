@@ -77,7 +77,7 @@ void symbol_print(struct symbol* symbol)
             printf("false, value: N/A");
         }
         if(symbol->is_array == true){
-            printf(" est un tableau de %d ocetes",symbol->value);
+            printf(" est un tableau de %d octets",symbol->value);
         }
         printf("\n");
         symbol = symbol->next;

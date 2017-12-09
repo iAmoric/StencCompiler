@@ -749,7 +749,7 @@ int main(int argc, char* argv[]) {
     quad_print(quad_list);
 
     //generation code assembleur
-    //generator(symbol_list, quad_list);
+    generator(symbol_list, quad_list);
 
     // Be clean.
     lex_free();

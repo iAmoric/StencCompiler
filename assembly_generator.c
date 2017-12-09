@@ -39,14 +39,20 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     }
     				break;
     			case E_PLUS:
-                    if (arg2->is_array){
+                    if (arg2->is_array)
                         fprintf(file, "\t\t# %s = %s + @%s\n", result->identifier, arg1->identifier, arg2->identifier);
-                    }
-                    else {
+                    else if (arg1->is_array)
+                        fprintf(file, "\t\t# %s = @%s + %s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    else
                         fprintf(file, "\t\t# %s = %s + %s\n", result->identifier, arg1->identifier, arg2->identifier);
-                    }
+
                     if (arg1 != NULL && arg2 != NULL) {
-                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        if (arg1->is_array){
+                            fprintf(file, "\t\tla $t0, _%s\n", arg1->identifier);
+                        }
+                        else {
+                            fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        }
                         if (arg2->is_array){
                             fprintf(file, "\t\tla $t1, _%s\n", arg2->identifier);
                         }
