@@ -14,10 +14,10 @@ int main(){
 		}
 	}
 	x = tab[3][7];
-	if( x == 10){
-		printf("OK\n");
-	}else{
+	if( x != 10){
 		printf("ERREUR\n");
+	}else{
+		printf("OK\n");
 	}
 	printi(x);
 	return 0;

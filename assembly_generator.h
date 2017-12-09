@@ -17,6 +17,7 @@ struct GotoList
 };
 
 void generator(struct symbol*, struct quad*);
+void load(FILE*, struct symbol*, char*);
 void addLabel(GotoList** listHead, int value);
 bool isInList(GotoList** listHead, int index);
 void gotoList_free(GotoList* listHead);
