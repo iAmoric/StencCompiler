@@ -1,0 +1,16 @@
+//test if else
+int main(){
+    int a = 5;
+    if (a == 6){
+        printf("IF");
+    }
+    else {
+        printf("ELSE");
+    }
+
+    printf("FIN");
+    return 0;
+}
+
+
+//FAILED
