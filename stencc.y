@@ -346,7 +346,7 @@ affectation:
       }
       $4.code->arg2 = $3.result;
       $4.code->next->arg2 = result;
-      struct quad* quad = quad_gen(E_TAB_WRITE,$4.result,$6.result,NULL);
+      struct quad* quad = quad_gen(E_TAB_WRITE,$6.result,$4.result,NULL);
       struct quad* code = quad_add($3.code,$4.code);
       quad_list_array_complete($3.true_list,result->array_dimension);
       code = quad_add(code,$6.code);
