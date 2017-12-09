@@ -53,6 +53,10 @@
 
 %%
 
+/**
+ * @I. axiom
+ */
+
 axiom:
     programme{
       //Axiom de la grammaire
@@ -69,13 +73,19 @@ programme:
       //$$.code = $6.code;
       $$.code = $7.code;
       struct quad* last_quad = quad_last($7.code);
+      //test d'analyse sémantique
       if(last_quad->operator != E_RETURN){
+        //le programme doit se terminer par un return
         printf("ERROR: main function must finish with a return statement\n");
         exit(1);
       }
     }
   ;
+/**
+ * @II. define
+ */
 
+//déclaration de plusieurs define
 define_list:
   define define_list{
 
@@ -83,7 +93,8 @@ define_list:
   |{
 
   }
-
+// les define de génère pas de code
+// mais une entrée dans la TdS
 define:
   DEFINE_STRING ID NUM{
     struct symbol* result = symbol_lookup(symbol_list, $2);
@@ -110,6 +121,9 @@ define:
       }
   }
 
+/**
+ * @III. statement_list
+ */
 statement_list:
   statement statement_list {
     $$.code = quad_add($1.code,$2.code);
@@ -150,6 +164,7 @@ statement:
   }
   |
   PRINTI '(' NUM ')' ';' {
+      //la variable affiché est dans un nouveau temporaire
       struct symbol* result = symbol_newtemp(&symbol_list);
       result->isconstant = true;
       result->value = $3;
@@ -164,6 +179,11 @@ statement:
         printf("ERROR: undeclared variable -> %s\n",$3);
         exit(1);
       }
+      //on ne peut pas afficher des array avec printi
+      if(result->is_array == true){
+        printf("ERROR: can't print an array\n");
+      }
+      //warning pour l'utilisateur
       if(result->is_initialised == false){
         printf("WARNING: using initialised variable -> %s\n",$3);
       }
@@ -207,6 +227,7 @@ declaration:
    }
    |
    INT ID array_declare {
+      //voir IV. Array
       debug("INT ID [...]");
       int array_size = 0;
       struct array_dimension* parcours;
@@ -218,21 +239,28 @@ declaration:
         exit(1);
       }
       result->is_array = true;
+      //association des dimensions du tableaux avec son entrée dans la TdS
       result->array_dimension = $3.dimension;
       parcours = $3.dimension;
+      //calcul du nombre total d'octets du tableau
       array_size = parcours->size->value;
       parcours = parcours ->next_dimension;
       while(parcours != NULL){
         array_size = array_size * parcours->size->value;
         parcours = parcours->next_dimension;
       }
-      array_size*=4;
-      result->value = array_size;
+      array_size*=4;//*4 car un int est sur 4 octets
+      result->value = array_size;//taille dans le champs value pour allocation en assembleur
       $$.result = NULL;
       $$.code = NULL;
    }
   ;
 
+/**
+ * @IV. array
+ */
+
+ //la taille d'un tableau est forcément indiquer avec des valeurs constantes
 array_declare:
    '[' NUM ']' array_declare {
     debug("array_declare [NUM]");
@@ -263,12 +291,14 @@ array_declare:
       }
    }
   | '[' NUM ']' {
+    //dernière dimension du tableau: int tab[?][?]...[?][ici];
     debug("[NUM]");
     $$.dimension = malloc(sizeof(struct array_dimension));
     struct symbol* size = symbol_newtemp_init(&symbol_list,$2);
     $$.dimension->size = size;
   }
   | '[' ID ']' {
+      //dernière dimension du tableau: int tab[?][?]...[?][ici];
       debug("[ID]");
       $$.dimension = malloc(sizeof(struct array_dimension));
       struct symbol* result = symbol_lookup(symbol_list, $2);
@@ -288,28 +318,36 @@ array_declare:
       }
 
   }
-
+//règle utiliser pour les accès en écriture ou lecture dans le tableau
 array:
+    //on ne genère pas les mêmes quad pour la première dimension du tableau
     expression ']' '[' array_next {
     debug( "expr ] [ array_next");
     $$.code = quad_add($1.code,$4.code);
     $$.true_list = $4.true_list;
+    //on indique la valeur à multiplier aux quads suivants
     $4.true_list->elt->arg1 = $1.result;
-    $$.result = $4.result;
+    $$.result = $4.result;//calcul d'offset
   }
   |
   expression ']'{
+    //pour les tableaux à une dimension
     debug("expr ] ");
     $$.result = $1.result;
-    $$.code = $1.code;
+    $$.code = $1.code;//calcul d'offset
   }
   ;
 array_next:
+    //permet de faire (offset_precedant)*dimension_actuel + valeur
+    //le premier off_set est vide et est complété dans array
+    //les dimension_actuel sont remplie plus tard grâce à des quad_list (par convention true_list)
+
     array_next '[' expression ']'{
     debug("[ expr ] [ array_next");
     struct symbol* result_mult = symbol_newtemp(&symbol_list);
     struct symbol* result_plus = symbol_newtemp(&symbol_list);
     struct quad* code = quad_add($1.code,$3.code);
+    //on va devoir compléter ce quad plus tard
     struct quad* multi = quad_gen(E_MULT,result_mult,$1.result,NULL);
     struct quad* plus = quad_gen(E_PLUS,result_plus,$3.result,result_mult);
     struct quad_list* array_list = quad_list_new(multi);
@@ -318,7 +356,7 @@ array_next:
     code = quad_add(code,plus);
     $$.true_list = array_list;
     $$.code = code;
-    $$.result = result_plus;
+    $$.result = result_plus;//calcul d'offset
   }
   |
    expression ']' {
@@ -333,7 +371,7 @@ array_next:
     code = quad_add(code,plus);
     $$.true_list = array_list;
     $$.code = code;
-    $$.result = result_plus;
+    $$.result = result_plus;//calcul d'offset
   }
   ;
 
@@ -342,10 +380,12 @@ mark_array_load:
     struct symbol* result_mult = symbol_newtemp(&symbol_list); //offset total
     struct symbol* result_addr = symbol_newtemp(&symbol_list);  // addr
     struct symbol* result_tab = symbol_newtemp(&symbol_list); //valeur à addr
+    //mult_size = arg1 = taille de la case mémoire arg2: offset (complété plus tard)
+    //taille de la case mémoire = 4 octets
     struct quad* mult_size = quad_gen(E_MULT,result_mult,symbol_newtemp_init(&symbol_list,4),NULL);
     struct quad* addr = quad_gen(E_PLUS,result_addr,result_mult,NULL);
     struct quad* tab = quad_gen(E_TAB_LOAD,result_tab,result_addr,NULL);
-    $$.result = result_tab;
+    $$.result = result_tab;//la valeur dans la case mémoire
     $$.code = quad_add(mult_size,addr);
     $$.code = quad_add($$.code,tab);
   }
@@ -354,18 +394,26 @@ mark_array_write:
   {
     struct symbol* result_mult = symbol_newtemp(&symbol_list); //offset total
     struct symbol* result_addr = symbol_newtemp(&symbol_list);  // addr
+    //mult_size = arg1 = taille de la case mémoire arg2: offset (complété plus tard)
+    //taille de la case mémoire = 4 octets
     struct quad* mult_size = quad_gen(E_MULT,result_mult,symbol_newtemp_init(&symbol_list,4),NULL);
     struct quad* addr = quad_gen(E_PLUS,result_addr,result_mult,NULL);
-    $$.result = result_addr;
+    $$.result = result_addr;//l'adresse où l'ont doit écrire
     $$.code = quad_add(mult_size,addr);
   }
   ;
-
+/**
+ * @V. affectation
+ */ 
 affectation:
     ID OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
+      }
+      if(result->is_array){
+        printf("ERROR: try to modify a array -> %s\n",$1);
         exit(1);
       }
       if(result->isconstant){
@@ -381,6 +429,7 @@ affectation:
     }
     |
     ID '['array mark_array_write OP_ASSIGN expression {
+      //voir IV. array
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
@@ -390,10 +439,11 @@ affectation:
         printf("ERROR: %s is not a array\n",$1);
         exit(1);
       }
-      $4.code->arg2 = $3.result;
-      $4.code->next->arg2 = result;
+      $4.code->arg2 = $3.result;//donner le calcul de l'offset (va être multiplier par 4)
+      $4.code->next->arg2 = result;//donner le nom du tableau pour le calcul de l'offset
       struct quad* quad = quad_gen(E_TAB_WRITE,$6.result,$4.result,NULL);
       struct quad* code = quad_add($3.code,$4.code);
+      //complète les quads de calcul d'offset avec les dimensions du tableau
       quad_list_array_complete($3.true_list,result->array_dimension);
       code = quad_add(code,$6.code);
       code = quad_add(code,quad);
@@ -404,6 +454,10 @@ affectation:
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
+      }
+      if(result->is_array == true){
+        printf("ERROR: can't do ++ to a array");
         exit(1);
       }
       if(result->isconstant){
@@ -424,6 +478,10 @@ affectation:
         printf("ERROR: undeclared variable -> %s\n",$1);
         exit(1);
       }
+      if(result->is_array == true){
+        printf("ERROR: can't do -- to a array");
+        exit(1);
+      }
       if(result->isconstant){
         printf("ERROR: try to modify a constant  -> %s\n",$1);
         exit(1);
@@ -437,7 +495,9 @@ affectation:
       $$.code = quad;
     }
     ;
-
+/**
+ * @VI. declaration_affectation
+ */
 declaration_affectation:
     INT ID OP_ASSIGN expression {
       debug("INT ID = expr");
@@ -472,6 +532,9 @@ declaration_affectation:
       $$.code = code;
     }
     ;
+/**
+ * @VII. expression
+ */
 expression:
     expression OP_PLUS expression {
       struct symbol* result = symbol_newtemp(&symbol_list);
@@ -551,6 +614,7 @@ expression:
     }
     |
     ID '['array mark_array_load {
+      //voir IV. array
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
@@ -579,7 +643,12 @@ expression:
     }
 ;
 
+
+/**
+ * @VIII. structures de contrôle
+ */
 mark:
+  //marqueur pour les else, for et while
   {
     $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
     $$.false_list = quad_list_new($$.code);
@@ -591,12 +660,16 @@ mark:
 control_structure:
     IF '(' condition ')' '{' statement_list '}' {
       debug("if (condition) {statement_list}");
+      //permet de gérer le cas où la statement_list est vide
+      //actuellement inutile avec cette grammaire car statement_list dérive toujours en au moins un element
       struct quad* last_condition = quad_last($3.code);
       struct quad* last_statement;
       struct symbol* where_true = symbol_newtemp_init(&symbol_list,last_condition->number+1);
       struct symbol* where_false;
       quad_list_complete($3.true_list,where_true);
       $$.code = quad_add($3.code,$6.code);
+      //permet de gérer le cas où la statement_list est vide
+      //actuellement inutile avec cette grammaire car statement_list dérive toujours en au moins un element
       if($6.code != NULL){
         last_statement = quad_last($6.code);
       }else{
@@ -607,6 +680,8 @@ control_structure:
     }
     |
     IF '(' condition ')' '{' statement_list '}' ELSE '{' mark statement_list '}'{
+      //voir IF '(' condition ')' '{' statement_list '}'
+      //mark permet de créer le goto pour sortir du if sans exécuté le code du else
       debug("if (condition) {statement_list} else { statement_list}");
       struct quad* last_condition = quad_last($3.code);
       struct quad* code;
@@ -629,6 +704,7 @@ control_structure:
     }
     |
     WHILE '(' condition ')' '{' statement_list mark '}' {
+      //mark permet d'avoir le goto pour retourner dans la condition
       debug("while (condition) {statement_list}");
       struct quad* last_condition = quad_last($3.code);
       struct quad* code;
@@ -638,7 +714,7 @@ control_structure:
       struct symbol* where_begin = symbol_newtemp_init(&symbol_list,$3.code->number);
       quad_list_complete($7.true_list,where_begin);
       quad_list_complete($3.true_list,where_true);
-      $3.code->need_label = true;
+      $3.code->need_label = true;//pour l'assembleur
       code = quad_add($3.code,$6.code);
       code = quad_add(code,$7.code);
       $$.code  = code;
@@ -653,14 +729,19 @@ control_structure:
     }
     |
     FOR '('affectation ';' condition ';' affectation mark ')' '{' statement_list mark'}' {
+      //1er  mark: permet de passer de l'affection de fin d'itération au test de condition
+      //2ème mark: permet de jump de la dernière instruction de la boucle à l'affectation de fin de boucle
       debug("for (affectation; condition; affectation){ statement_list } ");
+      //concaténation du code
       struct quad* code = quad_add($3.code,$5.code);
       code = quad_add(code,$7.code);
       code = quad_add(code,$8.code);
       code = quad_add(code,$11.code);
       code = quad_add(code,$12.code);
+      //pour l'assembleur
       $5.code->need_label = true;
       $7.code->need_label = true;
+      //remplir les quad_list
       struct symbol* where_false =  symbol_newtemp_init(&symbol_list,$12.code->number + 1);
       struct symbol* where_true =  symbol_newtemp_init(&symbol_list,$8.code->number + 1);
       struct symbol* where_begin_condition = symbol_newtemp_init(&symbol_list,$5.code->number);
@@ -672,7 +753,9 @@ control_structure:
       $$.code = code;
     }
     ;
-
+/**
+ * @IIX. condition
+ */
 condition:
     expression OP_EQUAL expression {
       debug("elt == elt");
