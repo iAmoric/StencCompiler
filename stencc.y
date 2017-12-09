@@ -37,7 +37,7 @@
 %token INT STENCIL MAIN RETURN VOID
 %token IF WHILE ELSE FOR TRUE FALSE
 %token CONST PRINTI PRINTF
-%token OP_PLUS OP_INC OP_MINUS OP_DEC
+%token OP_PLUS OP_INC OP_MINUS OP_DEC OP_DIFF
 %token OP_STEN OP_EQUAL OP_ASSIGN OP_AND
 %token OP_OR OP_NOT DEFINE_STRING
 %token OP_MULTI OP_DIV OP_SUP OP_INF OP_SUP_EQUAL OP_INF_EQUAL
@@ -707,6 +707,16 @@ condition:
     expression OP_SUP_EQUAL expression {
       debug("elt >= elt");
       struct quad* codeTrue = quad_gen(E_SUPEQUAL,NULL,$1.result,$3.result);
+      struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
+      struct quad* code = quad_add(codeTrue,codeFalse);
+      $$.code = code;
+      $$.true_list = quad_list_new(codeTrue);
+      $$.false_list = quad_list_new(codeFalse);
+    }
+    |
+    expression OP_DIFF expression {
+      debug("elt != elt");
+      struct quad* codeTrue = quad_gen(E_DIFFERENT,NULL,$1.result,$3.result);
       struct quad* codeFalse = quad_gen(E_GOTO,NULL,NULL,NULL);
       struct quad* code = quad_add(codeTrue,codeFalse);
       $$.code = code;

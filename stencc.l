@@ -45,6 +45,7 @@ string          \"(\\.|[^"\\])*\"
 "$"             { return OP_STEN; }
 "=="            { return OP_EQUAL; }
 "="             { return OP_ASSIGN; }
+"!="			{ return OP_DIFF;}
 "&&"            { return OP_AND; }
 "||"            { return OP_OR; }
 "!"             { return OP_NOT; }
