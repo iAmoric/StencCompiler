@@ -7,7 +7,7 @@
   #include "operator.h"
   #include "array_dimension.h"
   #include "assembly_generator.h"
-  //#define DEBUG
+  #define DEBUG
 
 
   void debug(char*);
@@ -235,17 +235,58 @@ declaration:
 
 array_declare:
    '[' NUM ']' array_declare {
-     debug("array_declare [NUM]");
+    debug("array_declare [NUM]");
     $$.dimension = malloc(sizeof(struct array_dimension));
     struct symbol* size = symbol_newtemp_init(&symbol_list,$2);
     $$.dimension->size = size;
     $$.dimension->next_dimension = $4.dimension;
   }
+  |
+  '[' ID ']' array_declare {
+      debug("[ID] array_declare");
+      $$.dimension = malloc(sizeof(struct array_dimension));
+      struct symbol* result = symbol_lookup(symbol_list, $2);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$2);
+      }
+      if(result->isconstant == true){
+        if(result->is_initialised == false){
+          printf("ERROR: array declaration using define with no value -> %s\n",$2);
+          exit(1);
+        }else{
+          $$.dimension->size = result;
+          $$.dimension->next_dimension = $4.dimension;
+        }
+      }else{
+        printf("ERROR: array declaration using a not constant value -> %s\n",$2);
+        exit(1);
+      }
+   }
   | '[' NUM ']' {
     debug("[NUM]");
     $$.dimension = malloc(sizeof(struct array_dimension));
     struct symbol* size = symbol_newtemp_init(&symbol_list,$2);
     $$.dimension->size = size;
+  }
+  | '[' ID ']' {
+      debug("[ID]");
+      $$.dimension = malloc(sizeof(struct array_dimension));
+      struct symbol* result = symbol_lookup(symbol_list, $2);
+      if(result == NULL){
+        printf("ERROR: undeclared variable -> %s\n",$2);
+      }
+      if(result->isconstant == true){
+        if(result->is_initialised == false){
+          printf("ERROR: array declaration using define with no value -> %s\n",$2);
+          exit(1);
+        }else{
+          $$.dimension->size = result;
+        }
+      }else{
+        printf("ERROR: array declaration using a not constant value -> %s\n",$2);
+        exit(1);
+      }
+
   }
 
 array:
