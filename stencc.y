@@ -31,7 +31,7 @@
 }
 %type <codegen> expression affectation statement define define_list
 %type <codegen> statement_list declaration programme declaration_affectation
-%type <codegen> mark condition control_structure array_declare array mark_array array_next
+%type <codegen> mark condition control_structure array_declare array mark_array_load mark_array_write array_next
 %token <string> ID STRING
 %token <value> NUM
 %token INT STENCIL MAIN RETURN VOID
@@ -291,17 +291,27 @@ array_next:
   }
   ;
 
-mark_array:
+mark_array_load:
   {
     struct symbol* result_mult = symbol_newtemp(&symbol_list); //offset total
     struct symbol* result_addr = symbol_newtemp(&symbol_list);  // addr
     struct symbol* result_tab = symbol_newtemp(&symbol_list); //valeur à addr
     struct quad* mult_size = quad_gen(E_MULT,result_mult,symbol_newtemp_init(&symbol_list,4),NULL);
     struct quad* addr = quad_gen(E_PLUS,result_addr,result_mult,NULL);
-    struct quad* tab = quad_gen(E_TAB,result_tab,result_addr,NULL);
+    struct quad* tab = quad_gen(E_TAB_LOAD,result_tab,result_addr,NULL);
     $$.result = result_tab;
     $$.code = quad_add(mult_size,addr);
     $$.code = quad_add($$.code,tab);
+  }
+  ;
+mark_array_write:
+  {
+    struct symbol* result_mult = symbol_newtemp(&symbol_list); //offset total
+    struct symbol* result_addr = symbol_newtemp(&symbol_list);  // addr
+    struct quad* mult_size = quad_gen(E_MULT,result_mult,symbol_newtemp_init(&symbol_list,4),NULL);
+    struct quad* addr = quad_gen(E_PLUS,result_addr,result_mult,NULL);
+    $$.result = result_addr;
+    $$.code = quad_add(mult_size,addr);
   }
   ;
 
@@ -324,7 +334,7 @@ affectation:
       debug("ID = expr");
     }
     | 
-    ID '['array mark_array OP_ASSIGN expression {
+    ID '['array mark_array_write OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
@@ -336,7 +346,7 @@ affectation:
       }
       $4.code->arg2 = $3.result;
       $4.code->next->arg2 = result;
-      struct quad* quad = quad_gen(E_ASSIGN,$4.result,$6.result,NULL);
+      struct quad* quad = quad_gen(E_TAB_WRITE,$4.result,$6.result,NULL);
       struct quad* code = quad_add($3.code,$4.code);
       quad_list_array_complete($3.true_list,result->array_dimension);
       code = quad_add(code,$6.code);
@@ -494,7 +504,7 @@ expression:
       debug("ID");
     }
     |
-    ID '['array mark_array{
+    ID '['array mark_array_load {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
