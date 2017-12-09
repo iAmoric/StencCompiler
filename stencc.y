@@ -509,6 +509,7 @@ expression:
       struct quad* code = quad_add($3.code,$4.code);
       quad_list_array_complete($3.true_list,result->array_dimension);
       $$.code = code;
+      $$.result = $4.result;
       debug("ID [...]");
     }
     |
