@@ -32,7 +32,10 @@ void quad_list_array_complete(struct quad_list* to_complete,struct array_dimensi
 		i++;
 		to_complete = to_complete->next;
 	}*/
-	if(to_complete == NULL && dimensions == NULL)return;
+	if(to_complete == NULL && dimensions == NULL){
+		quad_list_free(to_complete);
+		return;
+	}
 	if(to_complete == NULL){
 		//ERREUR le tableau a plus qu'une dimension
 		printf("ERROR: array has more then 1 dimension\n");
