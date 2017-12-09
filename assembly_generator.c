@@ -39,10 +39,20 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     }
     				break;
     			case E_PLUS:
-                    fprintf(file, "\t\t# %s = %s + %s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    if (arg2->is_array){
+                        fprintf(file, "\t\t# %s = %s + @%s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    }
+                    else {
+                        fprintf(file, "\t\t# %s = %s + %s\n", result->identifier, arg1->identifier, arg2->identifier);
+                    }
                     if (arg1 != NULL && arg2 != NULL) {
                         fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
-                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        if (arg2->is_array){
+                            fprintf(file, "\t\tla $t1, _%s\n", arg2->identifier);
+                        }
+                        else {
+                            fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        }
                         fprintf(file, "\t\tadd $t0, $t0, $t1\n");
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
@@ -183,7 +193,18 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     fprintf(file, "\t\t# goto label%d\n", result->value);
                     fprintf(file, "\t\tj label%d\n", result->value);
                     fprintf(file, "\n");
-
+                    break;
+                case E_TAB:
+                    fprintf(file, "\t\t# valeur à l'adresse %s\n", arg1->identifier);
+                    if (arg1 != NULL && arg2 == NULL) {
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
+                        fprintf(file, "\n");
+                    }
+                    else {
+                        fprintf(stderr, "Error quad\n");
+                        exit(1);
+                    }
                     break;
     			default:
     				break;
@@ -201,7 +222,10 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
         while (symbol_list != NULL) {
             fprintf(file, "\t_%s: ", symbol_list->identifier);
 
-            if (symbol_list->isconstant) {
+            if (symbol_list->is_array) {
+                fprintf(file, ".space %d\n", symbol_list->value);
+            }
+            else if (symbol_list->isconstant) {
                 if (symbol_list->string == NULL)
                     fprintf(file, ".word %d\n", symbol_list->value);
                 else

@@ -1,11 +1,12 @@
 //test for
 int main(){
 	int i;
+	int j;
 	int b = 5;
 	for (i = 1; i < 6; i = i + 1){
-		b = b * i;
-		printi(b);
-		printf("\n");
+			b = b * i;
+			printi(b);
+			printf("\n");
 	}
-	return 0;
+	printf("fin\n");
 }

@@ -323,7 +323,7 @@ affectation:
       $$.code = code;
       debug("ID = expr");
     }
-    | 
+    |
     ID '['array mark_array OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
