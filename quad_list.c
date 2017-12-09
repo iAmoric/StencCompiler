@@ -63,7 +63,7 @@ void quad_list_array_complete(struct quad_list* to_complete,struct array_dimensi
 		//ERREUR pas assez d'argument pour le tableau
 		exit(1);
 	}
-
+	quad_list_free(to_complete);
 }
 
 void quad_list_free(struct quad_list* list){

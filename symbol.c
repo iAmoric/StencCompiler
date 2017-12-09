@@ -87,12 +87,23 @@ void symbol_print(struct symbol* symbol)
 void symbol_free(struct symbol* list){
     struct symbol* parcours = list;
     struct symbol* before;
+    struct array_dimension* parcours_dimension;
+    struct array_dimension* before_dimension;
     while(parcours != NULL){
         before = parcours;
         parcours = parcours->next;
         free(before->identifier);
         if(before->string != NULL){
             free(before->string);
+        }
+        if(before->array_dimension != NULL){
+            parcours_dimension = before->array_dimension;
+            while(parcours_dimension != NULL){
+                before_dimension = parcours_dimension;
+                parcours_dimension = parcours_dimension->next_dimension;
+                free(before_dimension);
+
+            }
         }
         free(before);
     }
