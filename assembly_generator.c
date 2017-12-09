@@ -29,7 +29,10 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
     			case E_ASSIGN:
                     fprintf(file, "\t\t# %s = %s\n", result->identifier, arg1->identifier);
                     if (arg1 != NULL && arg2 == NULL) {
-                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        if (arg1->isconstant)
+                            fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                        else
+                            fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
                     }
@@ -38,6 +41,7 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         exit(1);
                     }
     				break;
+
     			case E_PLUS:
                     if (arg2->is_array)
                         fprintf(file, "\t\t# %s = %s + @%s\n", result->identifier, arg1->identifier, arg2->identifier);
@@ -51,13 +55,19 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                             fprintf(file, "\t\tla $t0, _%s\n", arg1->identifier);
                         }
                         else {
-                            fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                            if (arg1->isconstant)
+                                fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                            else
+                                fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
                         }
                         if (arg2->is_array){
                             fprintf(file, "\t\tla $t1, _%s\n", arg2->identifier);
                         }
                         else {
-                            fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                            if (arg2->isconstant)
+                                fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                            else
+                                fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                         }
                         fprintf(file, "\t\tadd $t0, $t0, $t1\n");
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
@@ -68,11 +78,18 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         exit(1);
                     }
                     break;
+
     			case E_MINUS:
                     fprintf(file, "\t\t# %s = %s - %s\n", result->identifier, arg1->identifier, arg2->identifier);
                     if (arg1 != NULL && arg2 != NULL) {
-                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
-                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        if (arg1->isconstant)
+                            fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                        else
+                            fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        if (arg2->isconstant)
+                            fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                        else
+                            fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                         fprintf(file, "\t\tsub $t0, $t0, $t1\n");
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
@@ -82,11 +99,18 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         exit(1);
                     }
     				break;
+
     			case E_MULT:
                     fprintf(file, "\t\t# %s = %s * %s\n", result->identifier, arg1->identifier, arg2->identifier);
                     if (arg1 != NULL && arg2 != NULL) {
-                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
-                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        if (arg1->isconstant)
+                            fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                        else
+                            fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        if (arg2->isconstant)
+                            fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                        else
+                            fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                         fprintf(file, "\t\tmul $t0, $t0, $t1\n");
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
@@ -96,11 +120,18 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         exit(1);
                     }
     				break;
+
     			case E_DIV:
                     fprintf(file, "\t\t# %s = %s / %s\n", result->identifier, arg1->identifier, arg2->identifier);
                     if (arg1 != NULL && arg2 != NULL) {
-                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
-                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
+                        if (arg1->isconstant)
+                            fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                        else
+                            fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        if (arg2->isconstant)
+                            fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                        else
+                            fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                         fprintf(file, "\t\tdiv $t0, $t0, $t1\n");
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
@@ -110,13 +141,18 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         exit(1);
                     }
                     break;
+
                 case E_PRINTI:
                     fprintf(file, "\t\t# printi %s\n", result->identifier);
                     fprintf(file, "\t\tli $v0, 1\n");
-                    fprintf(file, "\t\tlw $a0, _%s\n", result->identifier);
+                    if (result->isconstant)
+                        fprintf(file, "\t\tli $a0, %d\n", result->value);
+                    else
+                        fprintf(file, "\t\tlw $a0, _%s\n", result->identifier);
                     fprintf(file, "\t\tsyscall\n");
                     fprintf(file, "\n");
                     break;
+
                 case E_PRINTF:
                     fprintf(file, "\t\t# printf %s\n", result->identifier);
                     fprintf(file, "\t\tli $v0, 4\n");
@@ -124,25 +160,39 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     fprintf(file, "\t\tsyscall\n");
                     fprintf(file, "\n");
                     break;
+
                 case E_EQUAL:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
                         addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s == %s\n", result->value, arg1->identifier, arg2->identifier);
-                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
-                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    if (arg1->isconstant)
+                        fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                    else
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                    if (arg2->isconstant)
+                        fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                    else
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                     fprintf(file, "\t\tbeq $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
+
                 case E_DIFFERENT:
                     gotoLabel = symbol_lookup(symbol_list, result->identifier);
                     if (gotoLabel->value > index) {
                         addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s != %s\n", result->value, arg1->identifier, arg2->identifier);
-                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
-                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    if (arg1->isconstant)
+                        fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                    else
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                    if (arg2->isconstant)
+                        fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                    else
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                     fprintf(file, "\t\tbne $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
@@ -152,8 +202,14 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s <= %s\n", result->value, arg1->identifier, arg2->identifier);
-                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
-                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    if (arg1->isconstant)
+                        fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                    else
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                    if (arg2->isconstant)
+                        fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                    else
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                     fprintf(file, "\t\tble $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
@@ -163,8 +219,14 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s >= %s\n", result->value, arg1->identifier, arg2->identifier);
-                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
-                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    if (arg1->isconstant)
+                        fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                    else
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                    if (arg2->isconstant)
+                        fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                    else
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                     fprintf(file, "\t\tbge $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
@@ -174,8 +236,14 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s > %s\n", result->value, arg1->identifier, arg2->identifier);
-                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
-                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    if (arg1->isconstant)
+                        fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                    else
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                    if (arg2->isconstant)
+                        fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                    else
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                     fprintf(file, "\t\tbgt $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
@@ -185,8 +253,14 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                         addLabel(&listHead, gotoLabel->value);
                     }
                     fprintf(file, "\t\t# goto label%d if %s < %s\n", result->value, arg1->identifier, arg2->identifier);
-                    fprintf(file, "\t\tlw $t0 _%s\n", arg1->identifier);
-                    fprintf(file, "\t\tlw $t1 _%s\n", arg2->identifier);
+                    if (arg1->isconstant)
+                        fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                    else
+                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                    if (arg2->isconstant)
+                        fprintf(file, "\t\tli $t1, %d\n", arg2->value);
+                    else
+                        fprintf(file, "\t\tlw $t1, _%s\n", arg2->identifier);
                     fprintf(file, "\t\tblt $t0, $t1, label%d\n",result->value);
                     fprintf(file, "\n");
                     break;
@@ -204,7 +278,10 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     //arg1 est l'adresse, result est la valeur contenu à l'adresse arg1
                     fprintf(file, "\t\t#lire %s et stocker dans %s\n", arg1->identifier, result->identifier);
                     if (arg1 != NULL && arg2 == NULL) {
-                        fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
+                        if (arg1->isconstant)
+                            fprintf(file, "\t\tli $t0, %d\n", arg1->value);
+                        else
+                            fprintf(file, "\t\tlw $t0, _%s\n", arg1->identifier);
                         fprintf(file, "\t\tlw $t0, ($t0)\n");
                         fprintf(file, "\t\tsw $t0, _%s\n", result->identifier);
                         fprintf(file, "\n");
@@ -218,7 +295,10 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
                     //arg1 est l'adresse, result est la valeur a écrire dans la case à l'adresse arg1
                     fprintf(file, "\t\t# ecrire %s à l'adresse %s\n",  result->identifier, arg1->identifier);
                     if (arg1 != NULL && arg2 == NULL) {
-                        fprintf(file, "\t\tlw $t0, _%s\n", result->identifier);
+                        if (arg1->isconstant)
+                            fprintf(file, "\t\tli $t0, %d\n", result->value);
+                        else
+                            fprintf(file, "\t\tlw $t0, _%s\n", result->identifier);
                         fprintf(file, "\t\tlw $t1, _%s\n", arg1->identifier);
                         fprintf(file, "\t\tsw $t0, ($t1)\n");
                         fprintf(file, "\n");
@@ -242,19 +322,16 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
         fprintf(file, "\n");
         fprintf(file, ".data\n");
         while (symbol_list != NULL) {
-            fprintf(file, "\t_%s: ", symbol_list->identifier);
-
             if (symbol_list->is_array) {
-                fprintf(file, ".space %d\n", symbol_list->value);
+                fprintf(file, "\t_%s: .space %d\n", symbol_list->identifier, symbol_list->value);
             }
             else if (symbol_list->isconstant) {
-                if (symbol_list->string == NULL)
-                    fprintf(file, ".word %d\n", symbol_list->value);
-                else
-                    fprintf(file, ".asciiz %s\n", symbol_list->string);
+                if (symbol_list->string != NULL)
+                    fprintf(file, "\t_%s: .asciiz %s\n", symbol_list->identifier, symbol_list->string);
+
             }
             else
-                fprintf(file, ".word 0\n");
+                fprintf(file, "\t_%s: .word 0\n", symbol_list->identifier);
 
             symbol_list = symbol_list->next;
         }

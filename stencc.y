@@ -70,7 +70,7 @@ programme:
       $$.code = $7.code;
       struct quad* last_quad = quad_last($7.code);
       if(last_quad->operator != E_RETURN){
-        printf("ERROR: main function have to end with a return statement\n");
+        printf("ERROR: main function must finish with a return statement\n");
         exit(1);
       }
     }
@@ -758,7 +758,7 @@ int main(int argc, char* argv[]) {
     }
 
     yyparse();
-    
+
     printf("-----------------\nSymbol table:\n");
     symbol_print(symbol_list);
     printf("-----------------\nQuad list:\n");
