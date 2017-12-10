@@ -1,4 +1,4 @@
-//test commentaires
+//test commentaires, casse et numéro de ligne
 
 
 /*
@@ -8,7 +8,7 @@ Cette fonction est la fonction principale du programme
 int main() {
     int a = 0;
     /*****
-    Ceci est un commentaire */
+    Ceci est un commentaire*/
     if (a == 0) {
         a++;
     }

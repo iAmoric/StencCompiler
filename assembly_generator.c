@@ -3,7 +3,7 @@
 void generator(struct symbol* symbol_list, struct quad* quad) {
 
     FILE* file = NULL;
-    file = fopen("out/out.s", "w");
+    file = fopen("out.s", "w");
 
     if (file != NULL) {
         struct symbol* result;
@@ -246,6 +246,9 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
 
         fclose(file);
         gotoList_free(listHead);
+    }
+    else {
+        fprintf(stderr, "unable to generate the assembly file out.s\n");
     }
 }
 
