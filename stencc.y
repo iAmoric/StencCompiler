@@ -7,7 +7,7 @@
   #include "operator.h"
   #include "array_dimension.h"
   #include "assembly_generator.h"
-  //#define DEBUG
+  #define DEBUG
 
 
   void debug(char*);

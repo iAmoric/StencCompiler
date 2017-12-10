@@ -221,27 +221,39 @@ void generator(struct symbol* symbol_list, struct quad* quad) {
 
         //quitte proprement le programme
         fprintf(file, "\t\t# exit\n");
-        fprintf(file, "\t\tli $v0,10\n");
+        fprintf(file, "\t\tli $v0, 10\n");
         fprintf(file, "\t\tsyscall\n");
 
         //.data
         fprintf(file, "\n");
         fprintf(file, ".data\n");
 
-        while (symbol_list != NULL) {
-            if (symbol_list->is_array) {
-                fprintf(file, "\t_%s: .space %d\n", symbol_list->identifier, symbol_list->value);
-            }
-            //ajoute seulement les temp qui sont pas des constantes
-            else if (symbol_list->isconstant) {
-                if (symbol_list->string != NULL)
-                    fprintf(file, "\t_%s: .asciiz %s\n", symbol_list->identifier, symbol_list->string);
 
+        struct symbol* symbol_tmp;
+        symbol_tmp = symbol_list;
+        //ajoute d'abord les tableau en haut du .data
+        while (symbol_tmp != NULL) {
+            if (symbol_tmp->is_array) {
+                fprintf(file, "\t_%s: .space %d\n", symbol_tmp->identifier, symbol_tmp->value);
             }
-            else
-                fprintf(file, "\t_%s: .word 0\n", symbol_list->identifier);
+            symbol_tmp = symbol_tmp->next;
+        }
 
-            symbol_list = symbol_list->next;
+        symbol_tmp = symbol_list;
+        while (symbol_tmp != NULL) {
+            if (symbol_tmp->is_array == false) {
+                //ajoute seulement les temp qui sont pas des constantes
+                if (symbol_tmp->isconstant) {
+                    if (symbol_tmp->string != NULL)
+                        fprintf(file, "\t_%s: .asciiz %s\n", symbol_tmp->identifier, symbol_tmp->string);
+                    else if (symbol_tmp->value == 0)    //ajoute quand même si la valeur est à 0
+                        fprintf(file, "\t_%s: .word %d\n", symbol_tmp->identifier, symbol_tmp->value);
+                }
+                else
+                    fprintf(file, "\t_%s: .word 0\n", symbol_tmp->identifier);
+            }
+
+            symbol_tmp = symbol_tmp->next;
         }
 
         fclose(file);
