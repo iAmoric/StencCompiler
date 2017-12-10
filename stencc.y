@@ -18,8 +18,9 @@
   struct quad* quad_list = NULL;
   FILE* yyin;
   int err = 0;
-  
+
 %}
+
 %union {
   char* string;
   int value;
@@ -31,6 +32,7 @@
     struct array_dimension* dimension;
   }codegen;
 }
+
 %type <codegen> expression affectation statement define define_list
 %type <codegen> statement_list declaration programme declaration_affectation
 %type <codegen> mark condition control_structure array_declare array mark_array_load mark_array_write array_next
@@ -63,7 +65,8 @@ axiom:
     programme{
       //Axiom de la grammaire
       quad_list = $1.code;
-      printf("Match !!!\n");
+
+      debug("Match !\n");
       return 0;
     }
   ;
@@ -871,10 +874,12 @@ int main(int argc, char* argv[]) {
     yyparse();
 
     if (err == 0) {
+        #ifdef DEBUG
         printf("-----------------\nSymbol table:\n");
         symbol_print(symbol_list);
         printf("-----------------\nQuad list:\n");
         quad_print(quad_list);
+        #endif
 
         //generation code assembleur
         generator(symbol_list, quad_list);
