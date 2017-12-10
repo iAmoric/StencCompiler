@@ -7,7 +7,7 @@
   #include "operator.h"
   #include "array_dimension.h"
   #include "assembly_generator.h"
-  #define DEBUG
+  //#define DEBUG
 
 
   void debug(char*);
@@ -259,6 +259,7 @@ array_declare:
       struct symbol* result = symbol_lookup(symbol_list, $2);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$2);
+        exit(1);
       }
       if(result->isconstant == true){
         if(result->is_initialised == false){
@@ -288,6 +289,7 @@ array_declare:
       struct symbol* result = symbol_lookup(symbol_list, $2);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$2);
+        exit(1);
       }
       if(result->isconstant == true){
         if(result->is_initialised == false){
@@ -590,6 +592,7 @@ expression:
       struct symbol* result = symbol_lookup(symbol_list, $1);
       if(result == NULL){
         printf("ERROR: undeclared variable -> %s\n",$1);
+        exit(1);
       }
       if(result->is_define == true){
         if(result->is_initialised == false){
