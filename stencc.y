@@ -632,7 +632,7 @@ mark:
   {
     $$.code = quad_gen(E_GOTO,NULL,NULL,NULL);
     $$.false_list = quad_list_new($$.code);
-    $$.true_list = quad_list_new($$.code);
+    $$.true_list = $$.false_list;
   }
   ;
 
