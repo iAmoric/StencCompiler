@@ -7,7 +7,7 @@
   #include "operator.h"
   #include "array_dimension.h"
   #include "assembly_generator.h"
-  #define DEBUG
+  //#define DEBUG
 
 
   void debug(char*);
@@ -848,8 +848,9 @@ condition:
 %%
 
 void yyerror (char *s) {
+    extern int yylineno;
     err = 1;
-    fprintf(stderr, "[Yacc] error: %s\n", s);
+    fprintf(stderr, "[Yacc] error near line %d : %s\n", yylineno, s);
 }
 
 void debug (char* s){

@@ -11,6 +11,7 @@ comment         (\/\/.*)|("/*"([^*]|\*+[^*/])*\*+"/")
 string          \"(\\.|[^"\\])*\"
 
 %option case-insensitive
+%option yylineno
 
 %%
 
