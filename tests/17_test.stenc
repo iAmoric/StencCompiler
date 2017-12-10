@@ -2,13 +2,13 @@
 int main(){
     int a = 5;
     if (a == 6){
-        printf("IF");
+        printf("IF\n");
     }
     else {
-        printf("ELSE");
+        printf("ELSE\n");
     }
 
-    printf("FIN");
+    printf("FIN\n");
     return 0;
 }
 

@@ -7,6 +7,8 @@ int main(){
 	int i;
 	i = tab[1+1][0][a];
 	printi(i);
+	printf("\n");
+	printi(tab[1+1][0][a]);
 	return 0;
 }
-//OK
+//FAILED
