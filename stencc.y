@@ -179,13 +179,9 @@ statement:
       debug("printf");
   }
   |
-  RETURN NUM ';' {
-    struct symbol* result = symbol_newtemp(&symbol_list);
-    result->isconstant = true;
-    result->value = $2;
-    $$.result = result;
-    $$.code = quad_gen(E_RETURN,result,NULL,NULL);
-      debug("return");
+  RETURN expression ';' {
+    $$.code = quad_gen(E_RETURN,$2.result,NULL,NULL);
+    debug("return expression");
   }
   ;
 
