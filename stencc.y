@@ -688,19 +688,20 @@ control_structure:
       struct quad* last_statement;
       struct symbol* where_true = symbol_newtemp_init(&symbol_list,last_condition->number+1);
       struct symbol* where_false;
-      $3.false_list = quad_list_concat($3.false_list,$10.false_list);
+      //$3.false_list = quad_list_concat($3.false_list,$10.false_list);
+      quad_list_complete($3.false_list,symbol_newtemp_init(&symbol_list,$10.code->number+1));
       quad_list_complete($3.true_list,where_true);
       code = quad_add($3.code,$6.code);
       code = quad_add(code,$10.code);
       code = quad_add(code,$11.code);
       $$.code  = code;
       if($11.code != NULL){
-        last_statement = $11.code;
+        last_statement = quad_last($11.code);
       }else{
         last_statement = $10.code;
       }
       where_false = symbol_newtemp_init(&symbol_list,last_statement->number + 1);
-      quad_list_complete($3.false_list,where_false);
+      quad_list_complete($10.false_list,where_false);
     }
     |
     WHILE '(' condition ')' '{' statement_list mark '}' {
