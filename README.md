@@ -123,6 +123,12 @@ Comme en C, les commentaires sur une seule ligne sont de la forme `//Ceci est un
     lignes.
     */
 
+### Sortie
+
+Le compilateur génère un code assembleur MIPS R2000 exécutable par le simulateur de provesseur R2000 SPIM.
+Le fichier de sortie se nomme `out.s`.
+
+
 ## Auteurs
 
 * [Jean-Philippe Abegg](https://github.com/MrSaTurNin) - [contact](mailto:jean-philippe.abegg@etu.unistra.fr)
