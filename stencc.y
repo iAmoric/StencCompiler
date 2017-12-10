@@ -113,6 +113,7 @@ define:
         printf("ERROR: define already declared  -> %s",$2);
         exit(1);
       }
+      free($2);
   }
   |
   DEFINE_STRING ID {
@@ -124,6 +125,7 @@ define:
         printf("ERROR: define already declared  -> %s",$2);
         exit(1);
       }
+      free($2);
   }
 
 /**
@@ -203,6 +205,7 @@ declaration:
       result->is_never_used = true;
       $$.result = result;
       $$.code = NULL;
+      free($2);
    }
    |
    INT ID array_declare {
@@ -232,6 +235,7 @@ declaration:
       result->value = array_size;//taille dans le champs value pour allocation en assembleur
       $$.result = NULL;
       $$.code = NULL;
+      free($2);
    }
   ;
 
@@ -268,6 +272,7 @@ array_declare:
         printf("ERROR: array declaration using a not constant value -> %s\n",$2);
         exit(1);
       }
+      free($2);
    }
   | '[' NUM ']' {
     //dernière dimension du tableau: int tab[?][?]...[?][ici];
@@ -295,6 +300,7 @@ array_declare:
         printf("ERROR: array declaration using a not constant value -> %s\n",$2);
         exit(1);
       }
+      free($2);
 
   }
 //règle utiliser pour les accès en écriture ou lecture dans le tableau
@@ -405,6 +411,7 @@ affectation:
       struct quad* code = quad_add($3.code,quad);
       $$.code = code;
       debug("ID = expr");
+      free($1);
     }
     |
     ID '['array mark_array_write OP_ASSIGN expression {
@@ -428,6 +435,7 @@ affectation:
       code = quad_add(code,quad);
       $$.code = code;
       debug("ID [...] = expr");
+      free($1);
     }
     | ID OP_INC {
       struct symbol* result = symbol_lookup(symbol_list, $1);
@@ -450,6 +458,7 @@ affectation:
       struct symbol* temp = symbol_newtemp_init(&symbol_list,1);
       struct quad* quad = quad_gen(E_PLUS,result,result,temp);
       $$.code = quad;
+      free($1);
     }
     | ID OP_DEC {
       struct symbol* result = symbol_lookup(symbol_list, $1);
@@ -472,6 +481,7 @@ affectation:
       struct symbol* temp = symbol_newtemp_init(&symbol_list,1);
       struct quad* quad = quad_gen(E_MINUS,result,result,temp);
       $$.code = quad;
+      free($1);
     }
     ;
 /**
@@ -492,6 +502,8 @@ declaration_affectation:
       struct quad* quad = quad_gen(E_ASSIGN,result,$4.result,NULL);
       struct quad* code = quad_add($4.code,quad);
       $$.code = code;
+      free($2);
+
     }
     |
     CONST INT ID OP_ASSIGN expression {
@@ -510,6 +522,7 @@ declaration_affectation:
       struct quad* quad = quad_gen(E_ASSIGN,result,$5.result,NULL);
       struct quad* code = quad_add($5.code,quad);
       $$.code = code;
+      free($3);
     }
     ;
 /**
@@ -591,6 +604,8 @@ expression:
       $$.result = result;
       $$.code = NULL;
       debug("ID");
+      free($1);
+
     }
     |
     ID '['array mark_array_load {
@@ -611,6 +626,8 @@ expression:
       $$.code = code;
       $$.result = $4.result;
       debug("ID [...]");
+      free($1);
+
     }
     |
     NUM {
