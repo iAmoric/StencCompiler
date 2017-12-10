@@ -7,10 +7,9 @@
 
 identifier      [a-zA-Z_][0-9a-zA-Z_]*
 number          [0-9]+
-comment         \/\/.*
+comment         (\/\/.*)|("/*"([^*]|\*+[^*/])*\*+"/")
 string          \"(\\.|[^"\\])*\"
 
-/* comments like  '// blabla' */
 %option case-insensitive
 
 %%

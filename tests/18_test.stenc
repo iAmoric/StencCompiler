@@ -1,0 +1,27 @@
+//test commentaires
+
+
+/*
+Cette fonction est la fonction principale du programme
+*/
+
+int main() {
+    int a = 0;
+    /*****
+    Ceci est un commentaire */
+    if (a == 0) {
+        a++;
+    }
+    iF (a == 1) {
+        a++;
+    }
+    IF(a == 2) {
+        a++;
+    }
+    if (a == 3) {
+        a++;
+    }
+    printi(a);
+    return 0;
+
+}
