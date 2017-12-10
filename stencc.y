@@ -17,6 +17,8 @@
   struct symbol* symbol_list = NULL;
   struct quad* quad_list = NULL;
   FILE* yyin;
+  int err = 0;
+  
 %}
 %union {
   char* string;
@@ -377,7 +379,7 @@ mark_array_write:
   ;
 /**
  * @V. affectation
- */ 
+ */
 affectation:
     ID OP_ASSIGN expression {
       struct symbol* result = symbol_lookup(symbol_list, $1);
@@ -843,6 +845,7 @@ condition:
 %%
 
 void yyerror (char *s) {
+    err = 1;
     fprintf(stderr, "[Yacc] error: %s\n", s);
 }
 
@@ -867,13 +870,16 @@ int main(int argc, char* argv[]) {
 
     yyparse();
 
-    printf("-----------------\nSymbol table:\n");
-    symbol_print(symbol_list);
-    printf("-----------------\nQuad list:\n");
-    quad_print(quad_list);
+    if (err == 0) {
+        printf("-----------------\nSymbol table:\n");
+        symbol_print(symbol_list);
+        printf("-----------------\nQuad list:\n");
+        quad_print(quad_list);
 
-    //generation code assembleur
-    generator(symbol_list, quad_list);
+        //generation code assembleur
+        generator(symbol_list, quad_list);
+    }
+
 
     // Be clean.
     lex_free();
