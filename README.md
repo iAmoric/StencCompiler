@@ -38,7 +38,7 @@ Il est possible de déclarer des constantes globales grâce à la directive de p
     #define NOM_DEFINE VALEUR_DEFINE
     #define NOM_DEFINE
 
-La modification d'une constante (`const` ou  `#define`), et l'utilisation d'une variable non initialisée génère un warning à la compilation. Une re-déclaration d'une variable provoque une erreur à la compilation.
+La modification d'une constante (`const` ou  `#define`), et l'utilisation d'une variable non initialisée génère une erreur à la compilation. De même la re-déclaration d'une variable provoque une erreur à la compilation.
 
 Un warning indique la déclaration de variables non utilisées.
 
