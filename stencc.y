@@ -7,7 +7,7 @@
   #include "operator.h"
   #include "array_dimension.h"
   #include "assembly_generator.h"
-  //#define DEBUG
+  #define DEBUG
 
 
   void debug(char*);
@@ -173,7 +173,8 @@ statement:
   PRINTI '(' expression ')' ';' {
       //la variable affiché est dans un nouveau temporaire
       $$.result = $3.result;
-      $$.code = quad_gen(E_PRINTI,$$.result,NULL,NULL);
+      struct quad* code = quad_gen(E_PRINTI,$$.result,NULL,NULL);
+      $$.code = quad_add($3.code,code);
       debug("printi expr");
   }
   |
