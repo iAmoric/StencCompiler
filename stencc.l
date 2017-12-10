@@ -61,7 +61,7 @@ string          \"(\\.|[^"\\])*\"
 ";"	            { return yytext[0]; }
 \n              { }
 [\t ]           { }
-.			    { printf("[Lex] Unknown character: %s\n", yytext); }
+.			    { printf("[Lex] Unknown character: %s\n", yytext); exit(1);}
 
 %%
 
