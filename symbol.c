@@ -9,6 +9,7 @@ struct symbol* symbol_alloc(){
     new_symbol->is_initialised = false;
     new_symbol->is_array = false;
     new_symbol->is_copy = false;
+    new_symbol->is_never_used = false;
     new_symbol->value = 0; // seulement si c'est une constante
     new_symbol->string = NULL;
     new_symbol->next = NULL;

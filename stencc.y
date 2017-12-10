@@ -200,6 +200,7 @@ declaration:
         printf("ERROR: already declared variable -> %s",$2);
         exit(1);
       }
+      result->is_never_used = true;
       $$.result = result;
       $$.code = NULL;
    }
@@ -504,6 +505,7 @@ declaration_affectation:
         exit(1);
       }
       result->is_initialised = true;
+      result->is_never_used = true;
       $$.result = result;
       struct quad* quad = quad_gen(E_ASSIGN,result,$5.result,NULL);
       struct quad* code = quad_add($5.code,quad);
@@ -585,7 +587,7 @@ expression:
       else if(result->is_initialised == false){
         printf("WARNING: using uninitialized variable -> %s\n",$1);
       }
-
+      result->is_never_used = false;
       $$.result = result;
       $$.code = NULL;
       debug("ID");
@@ -884,6 +886,13 @@ int main(int argc, char* argv[]) {
 
         //generation code assembleur
         generator(symbol_list, quad_list);
+    }
+    struct symbol* parcours = symbol_list;
+    while(parcours != NULL){
+      if(parcours->is_never_used == true){
+        printf("WARNING: %s is never used\n",parcours->identifier);
+      }
+      parcours = parcours->next;
     }
 
 

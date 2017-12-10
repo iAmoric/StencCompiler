@@ -11,6 +11,7 @@ struct symbol {
   char* identifier;
   bool isconstant;
   bool is_initialised;
+  bool is_never_used;
   bool is_define;
   bool is_array;
   bool is_copy;
