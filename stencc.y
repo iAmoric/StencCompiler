@@ -163,34 +163,11 @@ statement:
       debug("control_structure");
   }
   |
-  PRINTI '(' NUM ')' ';' {
+  PRINTI '(' expression ')' ';' {
       //la variable affiché est dans un nouveau temporaire
-      struct symbol* result = symbol_newtemp(&symbol_list);
-      result->isconstant = true;
-      result->value = $3;
-      $$.result = result;
-      $$.code = quad_gen(E_PRINTI,result,NULL,NULL);
-      debug("printi num");
-  }
-  |
-  PRINTI '(' ID ')' ';' {
-      struct symbol* result = symbol_lookup(symbol_list, $3);
-      if(result == NULL){
-        printf("ERROR: undeclared variable -> %s\n",$3);
-        exit(1);
-      }
-      //on ne peut pas afficher des array avec printi
-      if(result->is_array == true){
-        printf("ERROR: can't print an array\n");
-      }
-      //warning pour l'utilisateur
-      if(result->is_initialised == false){
-        printf("WARNING: using initialised variable -> %s\n",$3);
-      }
-      $$.result = result;
-      struct quad* quad = quad_gen(E_PRINTI,result,NULL,NULL);
-      $$.code = quad;
-      debug("printi id");
+      $$.result = $3.result;
+      $$.code = quad_gen(E_PRINTI,$$.result,NULL,NULL);
+      debug("printi expr");
   }
   |
   PRINTF '(' STRING ')' ';' {
@@ -202,13 +179,9 @@ statement:
       debug("printf");
   }
   |
-  RETURN NUM ';' {
-    struct symbol* result = symbol_newtemp(&symbol_list);
-    result->isconstant = true;
-    result->value = $2;
-    $$.result = result;
-    $$.code = quad_gen(E_RETURN,result,NULL,NULL);
-      debug("return");
+  RETURN expression ';' {
+    $$.code = quad_gen(E_RETURN,$2.result,NULL,NULL);
+    debug("return expression");
   }
   ;
 
@@ -688,19 +661,20 @@ control_structure:
       struct quad* last_statement;
       struct symbol* where_true = symbol_newtemp_init(&symbol_list,last_condition->number+1);
       struct symbol* where_false;
-      $3.false_list = quad_list_concat($3.false_list,$10.false_list);
+      //$3.false_list = quad_list_concat($3.false_list,$10.false_list);
+      quad_list_complete($3.false_list,symbol_newtemp_init(&symbol_list,$10.code->number+1));
       quad_list_complete($3.true_list,where_true);
       code = quad_add($3.code,$6.code);
       code = quad_add(code,$10.code);
       code = quad_add(code,$11.code);
       $$.code  = code;
       if($11.code != NULL){
-        last_statement = $11.code;
+        last_statement = quad_last($11.code);
       }else{
         last_statement = $10.code;
       }
       where_false = symbol_newtemp_init(&symbol_list,last_statement->number + 1);
-      quad_list_complete($3.false_list,where_false);
+      quad_list_complete($10.false_list,where_false);
     }
     |
     WHILE '(' condition ')' '{' statement_list mark '}' {
