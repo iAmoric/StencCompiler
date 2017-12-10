@@ -163,34 +163,11 @@ statement:
       debug("control_structure");
   }
   |
-  PRINTI '(' NUM ')' ';' {
+  PRINTI '(' expression ')' ';' {
       //la variable affiché est dans un nouveau temporaire
-      struct symbol* result = symbol_newtemp(&symbol_list);
-      result->isconstant = true;
-      result->value = $3;
-      $$.result = result;
-      $$.code = quad_gen(E_PRINTI,result,NULL,NULL);
-      debug("printi num");
-  }
-  |
-  PRINTI '(' ID ')' ';' {
-      struct symbol* result = symbol_lookup(symbol_list, $3);
-      if(result == NULL){
-        printf("ERROR: undeclared variable -> %s\n",$3);
-        exit(1);
-      }
-      //on ne peut pas afficher des array avec printi
-      if(result->is_array == true){
-        printf("ERROR: can't print an array\n");
-      }
-      //warning pour l'utilisateur
-      if(result->is_initialised == false){
-        printf("WARNING: using initialised variable -> %s\n",$3);
-      }
-      $$.result = result;
-      struct quad* quad = quad_gen(E_PRINTI,result,NULL,NULL);
-      $$.code = quad;
-      debug("printi id");
+      $$.result = $3.result;
+      $$.code = quad_gen(E_PRINTI,$$.result,NULL,NULL);
+      debug("printi expr");
   }
   |
   PRINTF '(' STRING ')' ';' {
