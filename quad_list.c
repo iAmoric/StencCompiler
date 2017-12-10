@@ -25,6 +25,7 @@ void quad_list_complete(struct quad_list* list, struct symbol* goto_){
 }
 
 void quad_list_array_complete(struct quad_list* to_complete,struct array_dimension* dimensions){
+	struct quad_list* origin = to_complete;
 	dimensions = dimensions->next_dimension;
 	/*int i = 0;
 	while(to_complete != NULL){
@@ -34,6 +35,7 @@ void quad_list_array_complete(struct quad_list* to_complete,struct array_dimensi
 	}*/
 	if(to_complete == NULL && dimensions == NULL){
 		quad_list_free(to_complete);
+		quad_list_free(origin);
 		return;
 	}
 	if(to_complete == NULL){
@@ -66,7 +68,7 @@ void quad_list_array_complete(struct quad_list* to_complete,struct array_dimensi
 		//ERREUR pas assez d'argument pour le tableau
 		exit(1);
 	}
-	quad_list_free(to_complete);
+	quad_list_free(origin);
 }
 
 void quad_list_free(struct quad_list* list){
