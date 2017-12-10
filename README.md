@@ -11,9 +11,9 @@ Le langage Stenc est basé sur le langage C. Il s'agit d'un sous-ensemble du lan
 * Le seul type possible est int (constante possible)
 * Les tableaux tableaux multidimensionnels de int sont possibles
 * Les opérateurs possibles sont +, - (unaire et binaire), \*, \/, ++ et --
-* Les structures de controles possibles sont if (avec ou sans else), while et for
+* Les structures de contrôles possibles sont if (avec ou sans else), while et for
 * Les appels de fonction (y compris récursivement) sont possibles
-* Les fonctions de bases sont _printf()_ qui affiche une chaîne de caractères, et _printi()_, qui affiche un entier
+* Les fonctions de bases sont `printf()` qui affiche une chaîne de caractères, et `printi()`, qui affiche un entier
 
 ## Implémentation
 
@@ -29,11 +29,18 @@ Le langage Stenc est basé sur le langage C. Il s'agit d'un sous-ensemble du lan
     * int tab[id];
     * int tab[x] = {...}; n'a pas été implémenté
 
-Il n'est pas possible de modifier une constante (erreur compilation), et l'utilisation d'une variable non initialisée génère un warning à la compilation. Une re-déclaration d'une variable provoque une erreur à la compilation.
+Le type stencil n'a pas été implémenté.
 
 Les tableaux peuvent être multidimensionnels. Un tableau déclaré avec une valeur qui n'est pas une constante provoque une erreur à la compilation.
 
-Il est possible de déclarer des constantes globales grâce à la directive de préprocesseur _#define_.
+Il est possible de déclarer des constantes globales grâce à la directive de préprocesseur `#define`. Ces constantes peuvent avoir une valeur ou non :
+
+    #define NOM_DEFINE VALEUR_DEFINE
+    #define NOM_DEFINE
+
+La modification d'une constante (`const` ou  `#define`), et l'utilisation d'une variable non initialisée génère un warning à la compilation. Une re-déclaration d'une variable provoque une erreur à la compilation.
+
+Un warning indique la déclaration de variables non utilisées.
 
 ### Expressions arithmétiques
 
@@ -46,9 +53,17 @@ Les opérateurs possibles pour les expressions sont les suivants :
 
 L'opérateur _-_ peut être unaire.
 
+L'opérateur de stencil `$` n'a pas été implémenté.
+
 Les parenthèses pour donner des priorités à certaines expressions sont également possibles.
 
-L'accès au tableau par des expressions, par exemple _tab[i+2]_ est possible.
+L'accès au tableau par des expressions, par exemple `tab[i+2]` est possible. Cependant, la modification des pointeurs pour un tableau provoque une erreur de compilation. Par exemple, il est n'est pas possible de faire :
+
+    int tab[3][5];
+    tab = 2; // erreur compilation
+    tab[3] = 2 // erreur compilation
+
+L'utilisation d'une variable constante défini grâce à un `#define` sans valeur provoque une erreur de compilation.
 
 ### Structures de contrôles
 
@@ -58,7 +73,9 @@ Sont disponibles :
 * while
 * for
 
-Cependant, _else if_ n'a pas été implémenté.
+Cependant, `else if` n'a pas été implémenté.
+
+Une structure de contrôle doit contenir au minimum une instruction, et doit être obligatoirement délimitée par `{}`.  Un oubli provoque une erreur de compilation.
 
 Les conditions sont des opérations booléennes, avec les opérateurs suivants :
 * ==
@@ -75,9 +92,9 @@ Les parenthèses pour donner des priorités à certaines conditions sont égalem
 
 ### Fonctions d'affichage
 
-Les fonctions printi et printf ont été implémentées. Il est donc possible d'afficher une chaine de caracètres ASCII grâce à la fonction _printf()_, et un entier grâce à la fonction _printi()_.
+Les fonctions printi et printf ont été implémentées. Il est donc possible d'afficher une chaîne de caractères ASCII grâce à la fonction `printf()`, et un entier grâce à la fonction `printi()`.
 
-La fonction _printi()_ en paramètre une variable _id_ ou un nombre _number_, ou une expression arithmétique.
+La fonction `printi()` prend en paramètre une variable _id_ ou un nombre _number_, ou une expression arithmétique.
 
 ### Fonctions
 
@@ -89,7 +106,7 @@ Les appels de fonctions personnelles n'ont pas été implémentés. La seule fon
     }
 
 _number_ peut être un nombre, une variable, ou une expression arithmétique.
-Le _return_ est imporant. S'il est absent, cela provoque une erreur à la compilation.
+Le `return` est important. S'il est absent, cela provoque une erreur à la compilation.
 
 ### Commentaires
 
